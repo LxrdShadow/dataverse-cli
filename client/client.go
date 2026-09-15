@@ -7,26 +7,34 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type DataverseClient struct {
-	BaseURL string
-	ApiURL  string
-	Token   string
-	HTTP    *http.Client
+	BaseURL        string
+	ApiURL         string
+	Token          string
+	RequestTimeout time.Duration
+	HTTP           *http.Client
 }
 
-func NewDataverseClient(baseURL string, token string) *DataverseClient {
+func NewDataverseClient(baseURL string, token string, timeout time.Duration) *DataverseClient {
+	// TODO: Setup timeout on HTTP client
 	return &DataverseClient{
-		BaseURL: baseURL,
-		ApiURL:  strings.TrimRight(baseURL, "/") + "/api/data/v9.2",
-		Token:   token,
-		HTTP:    &http.Client{},
+		BaseURL:        baseURL,
+		ApiURL:         strings.TrimRight(baseURL, "/") + "/api/data/v9.2",
+		Token:          token,
+		RequestTimeout: timeout,
+		HTTP:           &http.Client{},
 	}
 }
 
 func (client *DataverseClient) get(url string) ([]byte, error) {
-	request, err := http.NewRequest(http.MethodGet, url, nil)
+	return client.request(http.MethodGet, url)
+}
+
+func (client *DataverseClient) request(method string, url string) ([]byte, error) {
+	request, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err
 	}
