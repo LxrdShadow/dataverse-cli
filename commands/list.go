@@ -2,6 +2,7 @@ package commands
 
 import (
 	"dvc/client"
+	"dvc/models"
 	"encoding/json"
 	"fmt"
 )
@@ -22,7 +23,7 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	records, err := client.ListRecords(table.EntitySetName)
+	records, err := client.ListRecords(table.EntitySetName, models.QueryOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to list records: %w", err)
 	}
