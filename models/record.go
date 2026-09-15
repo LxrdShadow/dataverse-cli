@@ -7,8 +7,8 @@ type ListRecordsResponse struct {
 }
 
 type QueryOptions struct {
-	Select  []string
-	Filters []string
+	Select  string
+	Filter  string
 	OrderBy string
 	Expand  string
 	Top     int

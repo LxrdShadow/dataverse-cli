@@ -2,15 +2,21 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"dvc/models"
 )
 
 func (client *DataverseClient) ListRecords(entitySetName string, options models.QueryOptions) ([]models.Record, error) {
 	requestUrl := client.ApiURL + "/" + entitySetName
+	queryString := getQueryString(options)
+	if queryString != "" {
+		requestUrl += "?" + queryString
+	}
+
+	fmt.Println(requestUrl)
 	body, err := client.get(requestUrl)
 	if err != nil {
 		return nil, err
@@ -27,19 +33,19 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 func getQueryString(options models.QueryOptions) string {
 	query := url.Values{}
 	if len(options.Select) > 0 {
-		query.Add("$select", strings.Join(options.Select, ","))
+		query.Set("$select", options.Select)
 	}
-	if len(options.Filters) > 0 {
-		query.Add("$filter", strings.Join(options.Filters, " and "))
+	if len(options.Filter) > 0 {
+		query.Set("$filter", options.Filter)
 	}
 	if options.OrderBy != "" {
-		query.Add("$orderby=", options.OrderBy)
+		query.Set("$orderby=", options.OrderBy)
 	}
 	if options.Expand != "" {
-		query.Add("$expand=", options.Expand)
+		query.Set("$expand=", options.Expand)
 	}
 	if options.Top != 0 {
-		query.Add("$top", strconv.Itoa(options.Top))
+		query.Set("$top", strconv.Itoa(options.Top))
 	}
 	return query.Encode()
 }
