@@ -3,12 +3,16 @@ package config
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 type Config struct {
 	BaseURL string
 	Token   string
+	Timeout time.Duration
 }
+
+var DEFAULT_TIMEOUT = 1 * time.Second
 
 func Load() (Config, error) {
 	// Get the base URL and token from environment variables
@@ -21,5 +25,6 @@ func Load() (Config, error) {
 	return Config{
 		BaseURL: baseURL,
 		Token:   token,
+		Timeout: DEFAULT_TIMEOUT,
 	}, nil
 }
