@@ -1,0 +1,6 @@
+package commands
+
+var CommandRegistry = map[string]*Command{
+	WhoAmICommand.Name: WhoAmICommand,
+	TablesCommand.Name: TablesCommand,
+}
