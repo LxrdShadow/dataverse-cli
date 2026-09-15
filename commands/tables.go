@@ -21,7 +21,7 @@ var TablesCommand = &Command{
 }
 
 func tables(client *client.DataverseClient, args []string) error {
-	filters, err := parseTableScope(args)
+	filters, err := parseTableFilters(args)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func tables(client *client.DataverseClient, args []string) error {
 	return nil
 }
 
-func parseTableScope(args []string) (TableFilters, error) {
+func parseTableFilters(args []string) (TableFilters, error) {
 	filters := TableFilters{
 		Scope:      models.TableScopeAll,
 		Management: models.TableManagementAll,
