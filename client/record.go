@@ -7,7 +7,7 @@ import (
 )
 
 func (client *DataverseClient) ListRecords(entitySetName string) ([]models.Record, error) {
-	requestUrl := client.ApiURL + "/entities/" + entitySetName
+	requestUrl := client.ApiURL + "/" + entitySetName
 	body, err := client.get(requestUrl)
 	if err != nil {
 		return nil, err

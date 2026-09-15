@@ -3,12 +3,13 @@ package client
 import (
 	"dvc/models"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strings"
 )
 
 func (client *DataverseClient) ListTables(scope models.TableScope, management models.TableManagement) ([]models.Entity, error) {
-	requestUrl := buildURL(client.ApiURL, scope, management, "")
+	requestUrl := buildURL(client.ApiURL, scope, management, nil)
 
 	body, err := client.get(requestUrl)
 	if err != nil {
@@ -34,7 +35,9 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 }
 
 func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, error) {
-	requestUrl := buildURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, logicalName)
+	logicalNameFilter := fmt.Sprintf("LogicalName eq '%s'", logicalName)
+	requestUrl := buildURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, []string{logicalNameFilter})
+
 	body, err := client.get(requestUrl)
 	if err != nil {
 		return nil, err
@@ -43,6 +46,10 @@ func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, err
 	var response models.EntityDefinitionsResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, err
+	}
+
+	if len(response.Value) == 0 {
+		return nil, fmt.Errorf("entity %s not found", logicalName)
 	}
 
 	entity := &models.Entity{
@@ -56,19 +63,17 @@ func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, err
 	return entity, nil
 }
 
-func buildURL(baseURL string, scope models.TableScope, management models.TableManagement, logicalName string) string {
+func buildURL(baseURL string, scope models.TableScope, management models.TableManagement, customFilters []string) string {
 	var builder strings.Builder
 	builder.WriteString(baseURL)
 	builder.WriteString("/EntityDefinitions")
-	if logicalName != "" {
-		builder.WriteString("(LogicalName='")
-		builder.WriteString(url.PathEscape(logicalName))
-		builder.WriteString("')")
-	}
-
 	builder.WriteString("?$select=LogicalName,EntitySetName,DisplayName,IsCustomEntity,IsManaged")
 
 	var filters []string
+
+	if len(customFilters) > 0 {
+		filters = append(filters, customFilters...)
+	}
 
 	switch scope {
 	case models.TableScopeSystem:
