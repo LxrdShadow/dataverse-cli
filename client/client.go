@@ -56,11 +56,15 @@ func (client *DataverseClient) request(method string, url string) ([]byte, error
 	}
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		if response.StatusCode == 401 {
+			return nil, fmt.Errorf("Unauthorized")
+		}
+
 		var errorResponse errors.ErrorResponse
 		if err := json.Unmarshal(body, &errorResponse); err == nil {
 			return nil, fmt.Errorf("%s", errorResponse.ErrorValue.Message)
 		}
-		return nil, errorResponse
+		return nil, fmt.Errorf("Unexpected status code: %d", response.StatusCode)
 	}
 
 	return body, nil
