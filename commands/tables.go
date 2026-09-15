@@ -16,7 +16,7 @@ type TableFilters struct {
 
 var TablesCommand = &Command{
 	Name:        "tables",
-	Description: "Retrieves a list of the tables in the Dataverse.",
+	Description: "Retrieves a list of the tables in the current Dataverse environment.",
 	Run:         tables,
 }
 

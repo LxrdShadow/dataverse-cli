@@ -26,7 +26,11 @@ func NewDataverseClient(baseURL string, token string) *DataverseClient {
 }
 
 func (client *DataverseClient) get(url string) ([]byte, error) {
-	request, err := http.NewRequest(http.MethodGet, url, nil)
+	return client.request(http.MethodGet, url)
+}
+
+func (client *DataverseClient) request(method string, url string) ([]byte, error) {
+	request, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err
 	}
