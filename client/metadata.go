@@ -8,7 +8,7 @@ import (
 )
 
 func (client *DataverseClient) ListTables(scope models.TableScope, management models.TableManagement) ([]models.Entity, error) {
-	requestUrl := buildURL(client.ApiURL, scope, management)
+	requestUrl := buildURL(client.ApiURL, scope, management, "")
 
 	body, err := client.get(requestUrl)
 	if err != nil {
@@ -61,7 +61,9 @@ func buildURL(baseURL string, scope models.TableScope, management models.TableMa
 	builder.WriteString(baseURL)
 	builder.WriteString("/EntityDefinitions")
 	if logicalName != "" {
-		builder.WriteString("(LogicalName='" + url.PathEscape(logicalName) + "')")
+		builder.WriteString("(LogicalName='")
+		builder.WriteString(url.PathEscape(logicalName))
+		builder.WriteString("')")
 	}
 
 	builder.WriteString("?$select=LogicalName,EntitySetName,DisplayName,IsCustomEntity,IsManaged")
