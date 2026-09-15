@@ -33,10 +33,38 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 	return entities, nil
 }
 
-func buildURL(baseURL string, scope models.TableScope, management models.TableManagement) string {
+func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, error) {
+	requestUrl := buildURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, logicalName)
+	body, err := client.get(requestUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	var response models.EntityDefinitionsResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, err
+	}
+
+	entity := &models.Entity{
+		LogicalName:   response.Value[0].LogicalName,
+		DisplayName:   response.Value[0].DisplayName.UserLocalizedLabel.Label,
+		EntitySetName: response.Value[0].EntitySetName,
+		IsCustom:      response.Value[0].IsCustomEntity,
+		IsManaged:     response.Value[0].IsManaged,
+	}
+
+	return entity, nil
+}
+
+func buildURL(baseURL string, scope models.TableScope, management models.TableManagement, logicalName string) string {
 	var builder strings.Builder
 	builder.WriteString(baseURL)
-	builder.WriteString("/EntityDefinitions?$select=LogicalName,EntitySetName,DisplayName,IsCustomEntity,IsManaged")
+	builder.WriteString("/EntityDefinitions")
+	if logicalName != "" {
+		builder.WriteString("(LogicalName='" + url.PathEscape(logicalName) + "')")
+	}
+
+	builder.WriteString("?$select=LogicalName,EntitySetName,DisplayName,IsCustomEntity,IsManaged")
 
 	var filters []string
 
