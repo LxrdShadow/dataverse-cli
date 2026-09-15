@@ -2,7 +2,6 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"strconv"
 
@@ -16,7 +15,6 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 		requestUrl += "?" + queryString
 	}
 
-	fmt.Println(requestUrl)
 	body, err := client.get(requestUrl)
 	if err != nil {
 		return nil, err
@@ -39,10 +37,10 @@ func getQueryString(options models.QueryOptions) string {
 		query.Set("$filter", options.Filter)
 	}
 	if options.OrderBy != "" {
-		query.Set("$orderby=", options.OrderBy)
+		query.Set("$orderby", options.OrderBy)
 	}
 	if options.Expand != "" {
-		query.Set("$expand=", options.Expand)
+		query.Set("$expand", options.Expand)
 	}
 	if options.Top != 0 {
 		query.Set("$top", strconv.Itoa(options.Top))
