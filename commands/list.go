@@ -114,6 +114,25 @@ func parseQueryOptions(args []string) (models.QueryOptions, error) {
 
 			options.Top = int(top)
 			i++
+		case "--maxpagesize":
+			if options.MaxPageSize != 0 {
+				return options, fmt.Errorf("duplicate --maxpagesize")
+			}
+			if i+1 >= len(args) {
+				return options, fmt.Errorf("missing value for --maxpagesize")
+			}
+
+			maxPageSize, err := strconv.ParseInt(args[i+1], 10, 0)
+			if err != nil {
+				return options, fmt.Errorf("invalid value for --maxpagesize: %w", err)
+			}
+
+			if maxPageSize <= 0 {
+				return options, fmt.Errorf("--maxpagesize must be greater than 0")
+			}
+
+			options.MaxPageSize = int(maxPageSize)
+			i++
 
 		default:
 			return options, fmt.Errorf("unknown option: %s", args[i])

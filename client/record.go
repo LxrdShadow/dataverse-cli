@@ -15,11 +15,16 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 		requestUrl += "?" + queryString
 	}
 
+	headers := make(map[string]string)
+	if options.MaxPageSize != 0 {
+		headers["Prefer"] = "odata.maxpagesize=" + strconv.Itoa(options.MaxPageSize)
+	}
+
 	var records []models.Record
 	next := true
 
 	for next {
-		body, err := client.get(requestUrl)
+		body, err := client.get(requestUrl, headers)
 		if err != nil {
 			return nil, err
 		}
