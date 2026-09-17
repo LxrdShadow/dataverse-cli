@@ -11,7 +11,7 @@ import (
 func (client *DataverseClient) ListTables(scope models.TableScope, management models.TableManagement) ([]models.Entity, error) {
 	requestUrl := buildURL(client.ApiURL, scope, management, nil)
 
-	body, err := client.get(requestUrl)
+	body, err := client.get(requestUrl, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, err
 	logicalNameFilter := fmt.Sprintf("LogicalName eq '%s'", logicalName)
 	requestUrl := buildURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, []string{logicalNameFilter})
 
-	body, err := client.get(requestUrl)
+	body, err := client.get(requestUrl, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -15,17 +15,37 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 		requestUrl += "?" + queryString
 	}
 
-	body, err := client.get(requestUrl)
-	if err != nil {
-		return nil, err
+	headers := make(map[string]string)
+	if options.MaxPageSize != 0 {
+		headers["Prefer"] = "odata.maxpagesize=" + strconv.Itoa(options.MaxPageSize)
 	}
 
-	var recordResponse models.ListRecordsResponse
-	if err := json.Unmarshal(body, &recordResponse); err != nil {
-		return nil, err
+	var records []models.Record
+
+	for requestUrl != "" {
+		body, err := client.get(requestUrl, headers)
+		if err != nil {
+			return nil, err
+		}
+
+		var recordResponse models.ListRecordsResponse
+		if err := json.Unmarshal(body, &recordResponse); err != nil {
+			return nil, err
+		}
+
+		if options.Top != 0 {
+			remaining := options.Top - len(records)
+			if len(recordResponse.Value) > remaining {
+				records = append(records, recordResponse.Value[:remaining]...)
+				break
+			}
+		}
+
+		records = append(records, recordResponse.Value...)
+		requestUrl = recordResponse.NextLink
 	}
 
-	return recordResponse.Value, nil
+	return records, nil
 }
 
 func getQueryString(options models.QueryOptions) string {

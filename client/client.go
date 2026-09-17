@@ -29,11 +29,11 @@ func NewDataverseClient(baseURL string, token string, timeout time.Duration) *Da
 	}
 }
 
-func (client *DataverseClient) get(url string) ([]byte, error) {
-	return client.request(http.MethodGet, url)
+func (client *DataverseClient) get(url string, headers map[string]string) ([]byte, error) {
+	return client.request(http.MethodGet, url, headers)
 }
 
-func (client *DataverseClient) request(method string, url string) ([]byte, error) {
+func (client *DataverseClient) request(method string, url string, headers map[string]string) ([]byte, error) {
 	request, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err
@@ -43,6 +43,10 @@ func (client *DataverseClient) request(method string, url string) ([]byte, error
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("OData-Version", "4.0")
 	request.Header.Set("OData-MaxVersion", "4.0")
+
+	for key, value := range headers {
+		request.Header.Set(key, value)
+	}
 
 	response, err := client.HTTP.Do(request)
 	if err != nil {
