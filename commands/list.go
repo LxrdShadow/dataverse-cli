@@ -5,6 +5,7 @@ import (
 	"dvc/models"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -16,8 +17,9 @@ var ListCommand = &Command{
 }
 
 func listRecords(client *client.DataverseClient, args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("usage: dvc list <table_logical_name> [options]")
+	if len(args) == 0 || slices.Contains(args, "-h") || slices.Contains(args, "--help") {
+		fmt.Println(listUsage())
+		return nil
 	}
 
 	logicalName := args[0]
@@ -75,7 +77,7 @@ func parseQueryOptions(args []string) (models.QueryOptions, error) {
 			} else {
 				return options, fmt.Errorf("missing value for --filters")
 			}
-		case "--orderby":
+		case "--order-by":
 			if options.OrderBy != "" {
 				return options, fmt.Errorf("duplicate --orderby")
 			}
@@ -140,4 +142,18 @@ func parseQueryOptions(args []string) (models.QueryOptions, error) {
 	}
 
 	return options, nil
+}
+
+func listUsage() string {
+	return `Usage: dvc list <table> [options]
+
+Options:
+  -h, --help 			Show this help message
+  --select <columns>  		Select specific columns to display (default: all, comma-separated)
+  --filter <condition> 		Filter rows based on a condition (default: none, comma-separated)
+  --order-by <column> 		Order rows by a specific column
+  --expand <columns> 		Expand specific columns to display
+  --top <count>     		Limit the number of rows to display (limit)
+  --max-page-size <count> 	Limit the number of rows per query page (pagination)
+`
 }
