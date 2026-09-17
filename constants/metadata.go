@@ -1,6 +1,10 @@
 package constants
 
 const (
-	DefaultEntityAttributes = "LogicalName,EntitySetName,DisplayName,IsCustomEntity,IsManaged"
-	DefaultAttributesInfo   = "LogicalName,DisplayName,IsPrimaryName"
+	DefaultEntityAttributes = "LogicalName,EntitySetName,DisplayName,IsCustomEntity,IsManaged,Attributes"
+	DefaultAttributesInfo   = "LogicalName,DisplayName,IsPrimaryName,IsPrimaryId"
+)
+
+var (
+	UniversalAttributesLogicalName = [...]string{"statecodename"}
 )

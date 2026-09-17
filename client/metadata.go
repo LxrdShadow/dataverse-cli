@@ -11,7 +11,7 @@ import (
 )
 
 func (client *DataverseClient) ListTables(scope models.TableScope, management models.TableManagement) ([]models.Entity, error) {
-	requestUrl := buildEntityListURL(client.ApiURL, scope, management, nil)
+	requestUrl := buildEntityListURL(client.ApiURL, scope, management, false, nil)
 
 	body, err := client.get(requestUrl, nil)
 	if err != nil {
@@ -31,15 +31,14 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 			EntitySetName: definition.EntitySetName,
 			IsCustom:      definition.IsCustomEntity,
 			IsManaged:     definition.IsManaged,
-			Attributes:    extractEntityAttributes(definition.Attributes),
 		})
 	}
 	return entities, nil
 }
 
-func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, error) {
+func (client *DataverseClient) GetTable(logicalName string, includeAttributes bool) (*models.Entity, error) {
 	logicalNameFilter := fmt.Sprintf("LogicalName eq '%s'", logicalName)
-	requestUrl := buildEntityListURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, []string{logicalNameFilter})
+	requestUrl := buildEntityListURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, includeAttributes, []string{logicalNameFilter})
 
 	body, err := client.get(requestUrl, nil)
 	if err != nil {
@@ -73,9 +72,7 @@ func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, err
 
 func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]models.EntityAttribute, error) {
 	baseURL := client.ApiURL + "/EntityDefinitions" + "(LogicalName='" + logicalName + "')" + "/Attributes"
-	query := url.Values{}
-	query.Set("$select", constants.DefaultAttributesInfo)
-	url := baseURL + "?" + query.Encode()
+	url := baseURL + "?$select=" + constants.DefaultAttributesInfo
 
 	body, err := client.get(url, nil)
 	if err != nil {
@@ -98,10 +95,13 @@ func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]model
 	return attributes, nil
 }
 
-func buildEntityListURL(baseURL string, scope models.TableScope, management models.TableManagement, customFilters []string) string {
+func buildEntityListURL(baseURL string, scope models.TableScope, management models.TableManagement, includeAttributes bool, customFilters []string) string {
 	query := url.Values{}
 	query.Set("$select", constants.DefaultEntityAttributes)
-	query.Set("$expand", "Attributes($select="+constants.DefaultAttributesInfo+")")
+
+	if includeAttributes {
+		query.Set("$expand", "Attributes($select="+constants.DefaultAttributesInfo+")")
+	}
 
 	filters := append([]string{}, customFilters...)
 
