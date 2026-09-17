@@ -43,3 +43,19 @@ const (
 	TableManagementManaged   TableManagement = "managed"
 	TableManagementUnmanaged TableManagement = "unmanaged"
 )
+
+type EntityAttributesResponse struct {
+	Value []RawEntityAttribute `json:"value"`
+}
+
+type RawEntityAttribute struct {
+	LogicalName   string      `json:"LogicalName"`
+	DisplayName   DisplayName `json:"DisplayName"`
+	IsPrimaryName bool        `json:"IsPrimaryName"`
+}
+
+type EntityAttribute struct {
+	LogicalName   string `json:"LogicalName"`
+	DisplayName   string `json:"DisplayName"`
+	IsPrimaryName bool   `json:"IsPrimaryName"`
+}

@@ -9,7 +9,7 @@ import (
 )
 
 func (client *DataverseClient) ListTables(scope models.TableScope, management models.TableManagement) ([]models.Entity, error) {
-	requestUrl := buildURL(client.ApiURL, scope, management, nil)
+	requestUrl := buildEntityListURL(client.ApiURL, scope, management, nil)
 
 	body, err := client.get(requestUrl, nil)
 	if err != nil {
@@ -36,7 +36,7 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 
 func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, error) {
 	logicalNameFilter := fmt.Sprintf("LogicalName eq '%s'", logicalName)
-	requestUrl := buildURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, []string{logicalNameFilter})
+	requestUrl := buildEntityListURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, []string{logicalNameFilter})
 
 	body, err := client.get(requestUrl, nil)
 	if err != nil {
@@ -67,7 +67,34 @@ func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, err
 	return entity, nil
 }
 
-func buildURL(baseURL string, scope models.TableScope, management models.TableManagement, customFilters []string) string {
+func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]models.EntityAttribute, error) {
+	baseURL := client.ApiURL + "/EntityDefinitions" + "(LogicalName='" + logicalName + "')" + "/Attributes"
+	query := url.Values{}
+	query.Set("$select", "LogicalName,DisplayName,IsPrimaryName")
+	url := baseURL + "?" + query.Encode()
+
+	body, err := client.get(url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var response models.EntityAttributesResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, err
+	}
+
+	var attributes []models.EntityAttribute
+	for _, attr := range response.Value {
+		attributes = append(attributes, models.EntityAttribute{
+			LogicalName:   attr.LogicalName,
+			DisplayName:   attr.DisplayName.UserLocalizedLabel.Label,
+			IsPrimaryName: attr.IsPrimaryName,
+		})
+	}
+	return attributes, nil
+}
+
+func buildEntityListURL(baseURL string, scope models.TableScope, management models.TableManagement, customFilters []string) string {
 	query := url.Values{}
 	query.Set("$select", "LogicalName,EntitySetName,DisplayName,IsCustomEntity,IsManaged")
 

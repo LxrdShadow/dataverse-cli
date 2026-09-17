@@ -45,11 +45,25 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		return nil
 	}
 
-	prettyJSON, err := json.MarshalIndent(records, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal JSON: %w", err)
+	switch listOptions.Output {
+	case models.OutputFormatJSON:
+		prettyJSON, err := json.MarshalIndent(records, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal JSON: %w", err)
+		}
+		fmt.Println(string(prettyJSON))
+	case models.OutputFormatTable:
+		attributes, err := client.ListEntityAttributes(table.LogicalName)
+		if err != nil {
+			return fmt.Errorf("failed to list attributes: %w", err)
+		}
+		prettyJSON, err := json.MarshalIndent(attributes, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal JSON: %w", err)
+		}
+		fmt.Println(string(prettyJSON))
 	}
-	fmt.Println(string(prettyJSON))
+
 	return nil
 }
 
