@@ -34,6 +34,11 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 			return nil, err
 		}
 
+		if options.Top != 0 && len(records)+len(recordResponse.Value) > options.Top {
+			records = append(records, recordResponse.Value[:options.Top-len(records)]...)
+			break
+		}
+
 		records = append(records, recordResponse.Value...)
 		next = recordResponse.NextLink != ""
 		requestUrl = recordResponse.NextLink
