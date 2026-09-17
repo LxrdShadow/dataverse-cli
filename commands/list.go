@@ -27,13 +27,14 @@ func listRecords(client *client.DataverseClient, args []string) error {
 
 	table, err := client.GetTable(logicalName)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return err
 	}
 
 	queryOptions, err := parseQueryOptions(optionArgs)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return err
 	}
+
 	records, err := client.ListRecords(table.EntitySetName, queryOptions)
 	if err != nil {
 		return fmt.Errorf("failed to list records: %w", err)
@@ -55,89 +56,56 @@ func listRecords(client *client.DataverseClient, args []string) error {
 func parseQueryOptions(args []string) (models.QueryOptions, error) {
 	options := models.QueryOptions{}
 
+	parseStringFlag := func(target *string, flag string, i *int) error {
+		if *target != "" {
+			return fmt.Errorf("duplicate %s", flag)
+		}
+		if *i+1 >= len(args) {
+			return fmt.Errorf("missing value for %s", flag)
+		}
+		*i++
+		*target = args[*i]
+		return nil
+	}
+
+	parseIntFlag := func(target *int, flag string, i *int) error {
+		var valStr string
+		if err := parseStringFlag(&valStr, flag, i); err != nil {
+			return err
+		}
+		val, err := strconv.Atoi(valStr)
+		if err != nil {
+			return fmt.Errorf("invalid value for %s: %w", flag, err)
+		}
+		if val <= 0 {
+			return fmt.Errorf("%s must be greater than 0", flag)
+		}
+		*target = val
+		return nil
+	}
+
 	for i := 0; i < len(args); i++ {
+		var err error
 		switch args[i] {
 		case "--select":
-			if options.Select != "" {
-				return options, fmt.Errorf("duplicate --select")
-			}
-			if i+1 < len(args) {
-				options.Select = strings.ReplaceAll(args[i+1], " ", "")
-				i++
-			} else {
-				return options, fmt.Errorf("missing value for --select")
-			}
+			err = parseStringFlag(&options.Select, "--select", &i)
+			options.Select = strings.ReplaceAll(options.Select, " ", "")
 		case "--filter":
-			if options.Filter != "" {
-				return options, fmt.Errorf("duplicate --filter")
-			}
-			if i+1 < len(args) {
-				options.Filter = args[i+1]
-				i++
-			} else {
-				return options, fmt.Errorf("missing value for --filters")
-			}
+			err = parseStringFlag(&options.Filter, "--filter", &i)
 		case "--order-by":
-			if options.OrderBy != "" {
-				return options, fmt.Errorf("duplicate --orderby")
-			}
-			if i+1 < len(args) {
-				options.OrderBy = args[i+1]
-				i++
-			} else {
-				return options, fmt.Errorf("missing value for --orderby")
-			}
+			err = parseStringFlag(&options.OrderBy, "--order-by", &i)
 		case "--expand":
-			if options.Expand != "" {
-				return options, fmt.Errorf("duplicate --expand")
-			}
-			if i+1 < len(args) {
-				options.Expand = args[i+1]
-				i++
-			} else {
-				return options, fmt.Errorf("missing value for --expand")
-			}
+			err = parseStringFlag(&options.Expand, "--expand", &i)
 		case "--top":
-			if options.Top != 0 {
-				return options, fmt.Errorf("duplicate --top")
-			}
-			if i+1 >= len(args) {
-				return options, fmt.Errorf("missing value for --top")
-			}
-
-			top, err := strconv.ParseInt(args[i+1], 10, 0)
-			if err != nil {
-				return options, fmt.Errorf("invalid value for --top: %w", err)
-			}
-
-			if top <= 0 {
-				return options, fmt.Errorf("--top must be greater than 0")
-			}
-
-			options.Top = int(top)
-			i++
+			err = parseIntFlag(&options.Top, "--top", &i)
 		case "--max-page-size":
-			if options.MaxPageSize != 0 {
-				return options, fmt.Errorf("duplicate --max-page-size")
-			}
-			if i+1 >= len(args) {
-				return options, fmt.Errorf("missing value for --max-page-size")
-			}
-
-			maxPageSize, err := strconv.ParseInt(args[i+1], 10, 0)
-			if err != nil {
-				return options, fmt.Errorf("invalid value for --max-page-size: %w", err)
-			}
-
-			if maxPageSize <= 0 {
-				return options, fmt.Errorf("--max-page-size must be greater than 0")
-			}
-
-			options.MaxPageSize = int(maxPageSize)
-			i++
-
+			err = parseIntFlag(&options.MaxPageSize, "--max-page-size", &i)
 		default:
 			return options, fmt.Errorf("unknown option: %s", args[i])
+		}
+
+		if err != nil {
+			return options, err
 		}
 	}
 
@@ -150,10 +118,10 @@ func listUsage() string {
 Options:
   -h, --help 			Show this help message
   --select <columns>  		Select specific columns to display (default: all, comma-separated)
-  --filter <condition> 		Filter rows based on a condition (default: none, comma-separated)
+  --filter <condition> 		Filter rows based on a condition (default: none)
   --order-by <column> 		Order rows by a specific column
   --expand <columns> 		Expand specific columns to display
-  --top <count>     		Limit the number of rows to display (limit)
+  --top <count>     		Limit the number of rows to display
   --max-page-size <count> 	Limit the number of rows per query page (pagination)
 `
 }
