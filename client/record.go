@@ -21,9 +21,8 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 	}
 
 	var records []models.Record
-	next := true
 
-	for next {
+	for requestUrl != "" {
 		body, err := client.get(requestUrl, headers)
 		if err != nil {
 			return nil, err
@@ -34,13 +33,15 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 			return nil, err
 		}
 
-		if options.Top != 0 && len(records)+len(recordResponse.Value) > options.Top {
-			records = append(records, recordResponse.Value[:options.Top-len(records)]...)
-			break
+		if options.Top != 0 {
+			remaining := options.Top - len(records)
+			if len(recordResponse.Value) > remaining {
+				records = append(records, recordResponse.Value[:remaining]...)
+				break
+			}
 		}
 
 		records = append(records, recordResponse.Value...)
-		next = recordResponse.NextLink != ""
 		requestUrl = recordResponse.NextLink
 	}
 
