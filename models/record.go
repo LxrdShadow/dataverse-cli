@@ -3,5 +3,6 @@ package models
 type Record map[string]any
 
 type ListRecordsResponse struct {
-	Value []Record `json:"value"`
+	NextLink string   `json:"@odata.nextLink"`
+	Value    []Record `json:"value"`
 }
