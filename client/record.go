@@ -8,16 +8,16 @@ import (
 	"dvc/models"
 )
 
-func (client *DataverseClient) ListRecords(entitySetName string, options models.QueryOptions) ([]models.Record, error) {
+func (client *DataverseClient) ListRecords(entitySetName string, options models.ListOptions) ([]models.Record, error) {
 	requestUrl := client.ApiURL + "/" + entitySetName
-	queryString := getQueryString(options)
+	queryString := getQueryString(options.Query)
 	if queryString != "" {
 		requestUrl += "?" + queryString
 	}
 
 	headers := make(map[string]string)
-	if options.MaxPageSize != 0 {
-		headers["Prefer"] = "odata.maxpagesize=" + strconv.Itoa(options.MaxPageSize)
+	if options.Query.MaxPageSize != 0 {
+		headers["Prefer"] = "odata.maxpagesize=" + strconv.Itoa(options.Query.MaxPageSize)
 	}
 
 	var records []models.Record
@@ -33,8 +33,8 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 			return nil, err
 		}
 
-		if options.Top != 0 {
-			remaining := options.Top - len(records)
+		if options.Query.Top != 0 {
+			remaining := options.Query.Top - len(records)
 			if len(recordResponse.Value) > remaining {
 				records = append(records, recordResponse.Value[:remaining]...)
 				break

@@ -30,12 +30,12 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
-	queryOptions, err := parseQueryOptions(optionArgs)
+	listOptions, err := parseOptions(optionArgs)
 	if err != nil {
 		return err
 	}
 
-	records, err := client.ListRecords(table.EntitySetName, queryOptions)
+	records, err := client.ListRecords(table.EntitySetName, listOptions)
 	if err != nil {
 		return fmt.Errorf("failed to list records: %w", err)
 	}
@@ -53,8 +53,10 @@ func listRecords(client *client.DataverseClient, args []string) error {
 	return nil
 }
 
-func parseQueryOptions(args []string) (models.QueryOptions, error) {
+func parseOptions(args []string) (models.ListOptions, error) {
 	options := models.QueryOptions{}
+	format := models.OutputFormatTable
+	var rawFormat string
 
 	parseStringFlag := func(target *string, flag string, i *int) error {
 		if *target != "" {
@@ -100,16 +102,28 @@ func parseQueryOptions(args []string) (models.QueryOptions, error) {
 			err = parseIntFlag(&options.Top, "--top", &i)
 		case "--max-page-size":
 			err = parseIntFlag(&options.MaxPageSize, "--max-page-size", &i)
+		case "--output":
+			if err = parseStringFlag(&rawFormat, args[i], &i); err != nil {
+				break
+			}
+			switch strings.ToLower(rawFormat) {
+			case "json":
+				format = models.OutputFormatJSON
+			case "table":
+				format = models.OutputFormatTable
+			default:
+				return models.ListOptions{}, fmt.Errorf("invalid output format %q (allowed: json, table)", rawFormat)
+			}
 		default:
-			return options, fmt.Errorf("unknown option: %s", args[i])
+			return models.ListOptions{}, fmt.Errorf("unknown option: %s", args[i])
 		}
 
 		if err != nil {
-			return options, err
+			return models.ListOptions{}, err
 		}
 	}
 
-	return options, nil
+	return models.ListOptions{Query: options, Output: format}, nil
 }
 
 func listUsage() string {
