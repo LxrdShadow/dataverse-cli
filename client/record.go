@@ -15,17 +15,26 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 		requestUrl += "?" + queryString
 	}
 
-	body, err := client.get(requestUrl)
-	if err != nil {
-		return nil, err
+	var records []models.Record
+	next := true
+
+	for next {
+		body, err := client.get(requestUrl)
+		if err != nil {
+			return nil, err
+		}
+
+		var recordResponse models.ListRecordsResponse
+		if err := json.Unmarshal(body, &recordResponse); err != nil {
+			return nil, err
+		}
+
+		records = append(records, recordResponse.Value...)
+		next = recordResponse.NextLink != ""
+		requestUrl = recordResponse.NextLink
 	}
 
-	var recordResponse models.ListRecordsResponse
-	if err := json.Unmarshal(body, &recordResponse); err != nil {
-		return nil, err
-	}
-
-	return recordResponse.Value, nil
+	return records, nil
 }
 
 func getQueryString(options models.QueryOptions) string {
