@@ -7,3 +7,8 @@ type QueryOptions struct {
 	Expand  string
 	Top     int
 }
+
+type ListOptions struct {
+	Output OutputFormat
+	Query  QueryOptions
+}
