@@ -5,11 +5,12 @@ type EntityDefinitionsResponse struct {
 }
 
 type EntityDefinition struct {
-	LogicalName    string      `json:"LogicalName"`
-	EntitySetName  string      `json:"EntitySetName"`
-	DisplayName    DisplayName `json:"DisplayName"`
-	IsCustomEntity bool        `json:"IsCustomEntity"`
-	IsManaged      bool        `json:"IsManaged"`
+	LogicalName    string               `json:"LogicalName"`
+	EntitySetName  string               `json:"EntitySetName"`
+	DisplayName    DisplayName          `json:"DisplayName"`
+	IsCustomEntity bool                 `json:"IsCustomEntity"`
+	IsManaged      bool                 `json:"IsManaged"`
+	Attributes     []RawEntityAttribute `json:"Attributes"`
 }
 
 type DisplayName struct {
@@ -26,6 +27,7 @@ type Entity struct {
 	EntitySetName string
 	IsCustom      bool
 	IsManaged     bool
+	Attributes    []EntityAttribute
 }
 
 type TableScope string

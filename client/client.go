@@ -66,9 +66,9 @@ func (client *DataverseClient) request(method string, url string, headers map[st
 
 		var errorResponse errors.ErrorResponse
 		if err := json.Unmarshal(body, &errorResponse); err == nil {
-			return nil, fmt.Errorf("%s", errorResponse.ErrorValue.Message)
+			return body, fmt.Errorf("%s", errorResponse.ErrorValue.Message)
 		}
-		return nil, fmt.Errorf("Unexpected status code: %d", response.StatusCode)
+		return body, fmt.Errorf("Unexpected status code: %d", response.StatusCode)
 	}
 
 	return body, nil
