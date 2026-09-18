@@ -52,13 +52,13 @@ func (client *DataverseClient) request(method string, url string, headers map[st
 
 	response, err := client.HTTP.Do(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read response: %w", err)
 	}
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
@@ -68,7 +68,7 @@ func (client *DataverseClient) request(method string, url string, headers map[st
 
 		var errorResponse errors.ErrorResponse
 		if err := json.Unmarshal(body, &errorResponse); err == nil {
-			return body, errorResponse.ErrorValue
+			return body, fmt.Errorf("error: %s", errorResponse.ErrorValue)
 		}
 		return body, fmt.Errorf("Unexpected status code: %d", response.StatusCode)
 	}

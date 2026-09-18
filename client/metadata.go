@@ -22,7 +22,7 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 		Value []models.Entity `json:"value"`
 	}
 	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse entity list: %w", err)
 	}
 
 	return response.Value, nil
@@ -41,7 +41,7 @@ func (client *DataverseClient) GetTable(logicalName string, includeAttributes bo
 		Value []models.Entity `json:"value"`
 	}
 	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse entity: %w", err)
 	}
 
 	if len(response.Value) == 0 {
@@ -68,7 +68,7 @@ func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]model
 		Value []models.EntityAttribute `json:"Attributes"`
 	}
 	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse entity attributes: %w", err)
 	}
 
 	return response.Value, nil

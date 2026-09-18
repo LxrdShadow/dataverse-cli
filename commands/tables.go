@@ -27,7 +27,7 @@ func tables(client *client.DataverseClient, args []string) error {
 
 	entities, err := client.ListTables(filters.Scope, filters.Management)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch table list: %w", err)
 	}
 
 	if len(entities) == 0 {
