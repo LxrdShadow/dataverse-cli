@@ -1,15 +1,17 @@
 package client
 
 import (
-	"dvc/models"
 	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
+
+	"dvc/constants"
+	"dvc/models"
 )
 
 func (client *DataverseClient) ListTables(scope models.TableScope, management models.TableManagement) ([]models.Entity, error) {
-	requestUrl := buildURL(client.ApiURL, scope, management, nil)
+	requestUrl := buildEntityListURL(client.ApiURL, scope, management, false, nil)
 
 	body, err := client.get(requestUrl, nil)
 	if err != nil {
@@ -34,9 +36,9 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 	return entities, nil
 }
 
-func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, error) {
+func (client *DataverseClient) GetTable(logicalName string, includeAttributes bool) (*models.Entity, error) {
 	logicalNameFilter := fmt.Sprintf("LogicalName eq '%s'", logicalName)
-	requestUrl := buildURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, []string{logicalNameFilter})
+	requestUrl := buildEntityListURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, includeAttributes, []string{logicalNameFilter})
 
 	body, err := client.get(requestUrl, nil)
 	if err != nil {
@@ -62,14 +64,37 @@ func (client *DataverseClient) GetTable(logicalName string) (*models.Entity, err
 		EntitySetName: response.Value[0].EntitySetName,
 		IsCustom:      response.Value[0].IsCustomEntity,
 		IsManaged:     response.Value[0].IsManaged,
+		Attributes:    extractEntityAttributes(response.Value[0].Attributes),
 	}
 
 	return entity, nil
 }
 
-func buildURL(baseURL string, scope models.TableScope, management models.TableManagement, customFilters []string) string {
+func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]models.EntityAttribute, error) {
+	baseURL := client.ApiURL + "/EntityDefinitions" + "(LogicalName='" + logicalName + "')" + "/Attributes"
+	url := baseURL + "?$select=" + constants.DefaultAttributesInfo
+
+	body, err := client.get(url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var response models.EntityAttributesResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, err
+	}
+
+	attributes := extractEntityAttributes(response.Value)
+	return attributes, nil
+}
+
+func buildEntityListURL(baseURL string, scope models.TableScope, management models.TableManagement, includeAttributes bool, customFilters []string) string {
 	query := url.Values{}
-	query.Set("$select", "LogicalName,EntitySetName,DisplayName,IsCustomEntity,IsManaged")
+	query.Set("$select", constants.DefaultEntityAttributes)
+
+	if includeAttributes {
+		query.Set("$expand", "Attributes($select="+constants.DefaultAttributesInfo+")")
+	}
 
 	filters := append([]string{}, customFilters...)
 
@@ -82,9 +107,9 @@ func buildURL(baseURL string, scope models.TableScope, management models.TableMa
 
 	switch management {
 	case models.TableManagementManaged:
-		filters = append(filters, url.PathEscape("IsManaged eq true"))
+		filters = append(filters, "IsManaged eq true")
 	case models.TableManagementUnmanaged:
-		filters = append(filters, url.PathEscape("IsManaged eq false"))
+		filters = append(filters, "IsManaged eq false")
 	}
 
 	if len(filters) > 0 {
@@ -92,4 +117,18 @@ func buildURL(baseURL string, scope models.TableScope, management models.TableMa
 	}
 
 	return baseURL + "/EntityDefinitions?" + query.Encode()
+}
+
+func extractEntityAttributes(rawAttributes []models.RawEntityAttribute) []models.EntityAttribute {
+	var attributes []models.EntityAttribute
+	for _, attr := range rawAttributes {
+		attributes = append(attributes, models.EntityAttribute{
+			LogicalName:   attr.LogicalName,
+			DisplayName:   attr.DisplayName.UserLocalizedLabel.Label,
+			IsPrimaryName: attr.IsPrimaryName,
+			IsPrimaryId:   attr.IsPrimaryId,
+			IsLogical:     attr.IsLogical,
+		})
+	}
+	return attributes
 }

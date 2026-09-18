@@ -5,9 +5,12 @@ import (
 	"dvc/models"
 	"encoding/json"
 	"fmt"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 var ListCommand = &Command{
@@ -25,16 +28,17 @@ func listRecords(client *client.DataverseClient, args []string) error {
 	logicalName := args[0]
 	optionArgs := args[1:]
 
-	table, err := client.GetTable(logicalName)
+	entity, err := client.GetTable(logicalName, true)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return err
 	}
 
-	queryOptions, err := parseQueryOptions(optionArgs)
+	listOptions, err := parseOptions(optionArgs)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return err
 	}
-	records, err := client.ListRecords(table.EntitySetName, queryOptions)
+
+	records, err := client.ListRecords(entity.EntitySetName, listOptions)
 	if err != nil {
 		return fmt.Errorf("failed to list records: %w", err)
 	}
@@ -44,104 +48,186 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		return nil
 	}
 
-	prettyJSON, err := json.MarshalIndent(records, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal JSON: %w", err)
+	switch listOptions.Output {
+	case models.OutputFormatJSON:
+		prettyJSON, err := json.MarshalIndent(records, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal JSON: %w", err)
+		}
+		fmt.Println(string(prettyJSON))
+	case models.OutputFormatTable:
+		t := table.NewWriter()
+		t.SetOutputMirror(os.Stdout)
+		attributes := entity.Attributes
+		headerRow := table.Row{}
+
+		if listOptions.Query.Select == "" {
+			displayStructure, logicalStructure := getGenericTableStructures(attributes)
+
+			headerRow = table.Row{displayStructure.Id, displayStructure.PrimaryName, displayStructure.CreatedOn, displayStructure.State, displayStructure.Owner}
+			t.AppendHeader(headerRow)
+
+			for _, record := range records {
+				t.AppendRow(table.Row{
+					record[logicalStructure.Id],
+					record[logicalStructure.PrimaryName],
+					record[logicalStructure.CreatedOn],
+					record[logicalStructure.State],
+					record[logicalStructure.Owner],
+				})
+			}
+		} else {
+			displayNames, logicalNames := getSelectFields(attributes, listOptions.Query.Select)
+			for _, name := range displayNames {
+				headerRow = append(headerRow, name)
+			}
+			t.AppendHeader(headerRow)
+
+			for _, record := range records {
+				row := table.Row{}
+				for _, name := range logicalNames {
+					row = append(row, record[name])
+				}
+				t.AppendRow(row)
+			}
+		}
+
+		t.Render()
 	}
-	fmt.Println(string(prettyJSON))
+
 	return nil
 }
 
-func parseQueryOptions(args []string) (models.QueryOptions, error) {
-	options := models.QueryOptions{}
+// Returns the logical and display names of the selected fields
+// It gets the formatted field name first, then falls back to the raw field name if not found
+//
+// First return value: display names
+//
+// Second return value: logical names
+func getSelectFields(attributes []models.EntityAttribute, selectedFields string) ([]string, []string) {
+	var logicalNames []string
+	var displayNames []string
+	fields := strings.Split(selectedFields, ",")
 
-	for i := 0; i < len(args); i++ {
-		switch args[i] {
-		case "--select":
-			if options.Select != "" {
-				return options, fmt.Errorf("duplicate --select")
-			}
-			if i+1 < len(args) {
-				options.Select = strings.ReplaceAll(args[i+1], " ", "")
-				i++
-			} else {
-				return options, fmt.Errorf("missing value for --select")
-			}
-		case "--filter":
-			if options.Filter != "" {
-				return options, fmt.Errorf("duplicate --filter")
-			}
-			if i+1 < len(args) {
-				options.Filter = args[i+1]
-				i++
-			} else {
-				return options, fmt.Errorf("missing value for --filters")
-			}
-		case "--order-by":
-			if options.OrderBy != "" {
-				return options, fmt.Errorf("duplicate --orderby")
-			}
-			if i+1 < len(args) {
-				options.OrderBy = args[i+1]
-				i++
-			} else {
-				return options, fmt.Errorf("missing value for --orderby")
-			}
-		case "--expand":
-			if options.Expand != "" {
-				return options, fmt.Errorf("duplicate --expand")
-			}
-			if i+1 < len(args) {
-				options.Expand = args[i+1]
-				i++
-			} else {
-				return options, fmt.Errorf("missing value for --expand")
-			}
-		case "--top":
-			if options.Top != 0 {
-				return options, fmt.Errorf("duplicate --top")
-			}
-			if i+1 >= len(args) {
-				return options, fmt.Errorf("missing value for --top")
-			}
+	availableAttrs := make(map[string]models.EntityAttribute)
+	for _, attr := range attributes {
+		availableAttrs[attr.LogicalName] = attr
+	}
 
-			top, err := strconv.ParseInt(args[i+1], 10, 0)
-			if err != nil {
-				return options, fmt.Errorf("invalid value for --top: %w", err)
-			}
+	const logicalSuffix = "name"
+	const oDataFormattedSuffix = "@OData.Community.Display.V1.FormattedValue"
 
-			if top <= 0 {
-				return options, fmt.Errorf("--top must be greater than 0")
-			}
+	for _, field := range fields {
+		field = strings.TrimSpace(field)
 
-			options.Top = int(top)
-			i++
-		case "--max-page-size":
-			if options.MaxPageSize != 0 {
-				return options, fmt.Errorf("duplicate --max-page-size")
-			}
-			if i+1 >= len(args) {
-				return options, fmt.Errorf("missing value for --max-page-size")
-			}
+		formattedFieldName := field + oDataFormattedSuffix
+		formattedLogicalName := field + logicalSuffix
 
-			maxPageSize, err := strconv.ParseInt(args[i+1], 10, 0)
-			if err != nil {
-				return options, fmt.Errorf("invalid value for --max-page-size: %w", err)
-			}
-
-			if maxPageSize <= 0 {
-				return options, fmt.Errorf("--max-page-size must be greater than 0")
-			}
-
-			options.MaxPageSize = int(maxPageSize)
-			i++
-
-		default:
-			return options, fmt.Errorf("unknown option: %s", args[i])
+		if _, found := availableAttrs[formattedLogicalName]; found {
+			displayAttr := availableAttrs[field]
+			logicalNames = append(logicalNames, formattedFieldName)
+			displayNames = append(displayNames, displayAttr.DisplayName)
+		} else if attr, found := availableAttrs[field]; found {
+			logicalNames = append(logicalNames, attr.LogicalName)
+			displayNames = append(displayNames, attr.DisplayName)
 		}
 	}
 
-	return options, nil
+	return displayNames, logicalNames
+}
+
+// Returns a generic table structure for display and logical names
+//
+// First return value: display names
+//
+// Second return value: logical names
+func getGenericTableStructures(attributes []models.EntityAttribute) (models.GenericTableStructure, models.GenericTableStructure) {
+	displayStructure := models.GenericTableStructure{Id: "ID", CreatedOn: "Created On", State: "State", Owner: "Owner"}
+	logicalStructure := models.GenericTableStructure{CreatedOn: "createdon", State: "statecode@OData.Community.Display.V1.FormattedValue", Owner: "_ownerid_value@OData.Community.Display.V1.FormattedValue"}
+
+	for _, attr := range attributes {
+		if attr.IsPrimaryName {
+			displayStructure.PrimaryName = attr.DisplayName
+			logicalStructure.PrimaryName = attr.LogicalName
+		} else if attr.IsPrimaryId && !attr.IsLogical {
+			logicalStructure.Id = attr.LogicalName
+		}
+	}
+
+	return displayStructure, logicalStructure
+}
+
+func parseOptions(args []string) (models.ListOptions, error) {
+	options := models.QueryOptions{}
+	format := models.OutputFormatTable
+	var rawFormat string
+
+	parseStringFlag := func(target *string, flag string, i *int) error {
+		if *target != "" {
+			return fmt.Errorf("duplicate %s", flag)
+		}
+		if *i+1 >= len(args) {
+			return fmt.Errorf("missing value for %s", flag)
+		}
+		*i++
+		*target = args[*i]
+		return nil
+	}
+
+	parseIntFlag := func(target *int, flag string, i *int) error {
+		var valStr string
+		if err := parseStringFlag(&valStr, flag, i); err != nil {
+			return err
+		}
+		val, err := strconv.Atoi(valStr)
+		if err != nil {
+			return fmt.Errorf("invalid value for %s: %w", flag, err)
+		}
+		if val <= 0 {
+			return fmt.Errorf("%s must be greater than 0", flag)
+		}
+		*target = val
+		return nil
+	}
+
+	for i := 0; i < len(args); i++ {
+		var err error
+		switch args[i] {
+		case "--select":
+			err = parseStringFlag(&options.Select, "--select", &i)
+			options.Select = strings.ReplaceAll(options.Select, " ", "")
+		case "--filter":
+			err = parseStringFlag(&options.Filter, "--filter", &i)
+		case "--order-by":
+			err = parseStringFlag(&options.OrderBy, "--order-by", &i)
+		case "--expand":
+			err = parseStringFlag(&options.Expand, "--expand", &i)
+		case "--top":
+			err = parseIntFlag(&options.Top, "--top", &i)
+		case "--max-page-size":
+			err = parseIntFlag(&options.MaxPageSize, "--max-page-size", &i)
+		case "--output":
+			if err = parseStringFlag(&rawFormat, args[i], &i); err != nil {
+				break
+			}
+			switch strings.ToLower(rawFormat) {
+			case "json":
+				format = models.OutputFormatJSON
+			case "table":
+				format = models.OutputFormatTable
+			default:
+				return models.ListOptions{}, fmt.Errorf("invalid output format %q (allowed: json, table)", rawFormat)
+			}
+		default:
+			return models.ListOptions{}, fmt.Errorf("unknown option: %s", args[i])
+		}
+
+		if err != nil {
+			return models.ListOptions{}, err
+		}
+	}
+
+	return models.ListOptions{Query: options, Output: format}, nil
 }
 
 func listUsage() string {
@@ -150,10 +236,10 @@ func listUsage() string {
 Options:
   -h, --help 			Show this help message
   --select <columns>  		Select specific columns to display (default: all, comma-separated)
-  --filter <condition> 		Filter rows based on a condition (default: none, comma-separated)
+  --filter <condition> 		Filter rows based on a condition (default: none)
   --order-by <column> 		Order rows by a specific column
   --expand <columns> 		Expand specific columns to display
-  --top <count>     		Limit the number of rows to display (limit)
+  --top <count>     		Limit the number of rows to display
   --max-page-size <count> 	Limit the number of rows per query page (pagination)
 `
 }

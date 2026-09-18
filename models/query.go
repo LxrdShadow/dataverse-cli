@@ -8,3 +8,8 @@ type QueryOptions struct {
 	MaxPageSize int
 	Top         int
 }
+
+type ListOptions struct {
+	Output OutputFormat
+	Query  QueryOptions
+}

@@ -40,9 +40,11 @@ func (client *DataverseClient) request(method string, url string, headers map[st
 	}
 
 	request.Header.Set("Authorization", "Bearer "+client.Token)
+	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("OData-Version", "4.0")
 	request.Header.Set("OData-MaxVersion", "4.0")
+	request.Header.Set("Prefer", "odata.include-annotations=*")
 
 	for key, value := range headers {
 		request.Header.Set(key, value)
@@ -66,9 +68,9 @@ func (client *DataverseClient) request(method string, url string, headers map[st
 
 		var errorResponse errors.ErrorResponse
 		if err := json.Unmarshal(body, &errorResponse); err == nil {
-			return nil, fmt.Errorf("%s", errorResponse.ErrorValue.Message)
+			return body, fmt.Errorf("%s", errorResponse.ErrorValue.Message)
 		}
-		return nil, fmt.Errorf("Unexpected status code: %d", response.StatusCode)
+		return body, fmt.Errorf("Unexpected status code: %d", response.StatusCode)
 	}
 
 	return body, nil
