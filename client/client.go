@@ -40,6 +40,7 @@ func (client *DataverseClient) request(method string, url string, headers map[st
 	}
 
 	request.Header.Set("Authorization", "Bearer "+client.Token)
+	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("OData-Version", "4.0")
 	request.Header.Set("OData-MaxVersion", "4.0")

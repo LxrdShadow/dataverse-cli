@@ -56,27 +56,40 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		}
 		fmt.Println(string(prettyJSON))
 	case models.OutputFormatTable:
-		attributes := entity.Attributes
-		// prettyJSON, err := json.MarshalIndent(attributes, "", "  ")
-		// if err != nil {
-		// 	return fmt.Errorf("failed to marshal JSON: %w", err)
-		// }
-		// fmt.Println(string(prettyJSON))
-		displayStructure, logicalStructure := getGenericTableStructures(attributes)
-
 		t := table.NewWriter()
 		t.SetOutputMirror(os.Stdout)
-		t.AppendHeader(table.Row{displayStructure.Id, displayStructure.PrimaryName, displayStructure.CreatedOn, displayStructure.State, displayStructure.Owner})
-		fmt.Println(logicalStructure)
+		attributes := entity.Attributes
+		headerRow := table.Row{}
 
-		for _, record := range records {
-			t.AppendRow(table.Row{
-				record[logicalStructure.Id],
-				record[logicalStructure.PrimaryName],
-				record[logicalStructure.CreatedOn],
-				record[logicalStructure.State],
-				record[logicalStructure.Owner],
-			})
+		if listOptions.Query.Select == "" {
+			displayStructure, logicalStructure := getGenericTableStructures(attributes)
+
+			headerRow = table.Row{displayStructure.Id, displayStructure.PrimaryName, displayStructure.CreatedOn, displayStructure.State, displayStructure.Owner}
+			t.AppendHeader(headerRow)
+
+			for _, record := range records {
+				t.AppendRow(table.Row{
+					record[logicalStructure.Id],
+					record[logicalStructure.PrimaryName],
+					record[logicalStructure.CreatedOn],
+					record[logicalStructure.State],
+					record[logicalStructure.Owner],
+				})
+			}
+		} else {
+			displayNames, logicalNames := getSelectFields(attributes, listOptions.Query.Select)
+			for _, name := range displayNames {
+				headerRow = append(headerRow, name)
+			}
+			t.AppendHeader(headerRow)
+
+			for _, record := range records {
+				row := table.Row{}
+				for _, name := range logicalNames {
+					row = append(row, record[name])
+				}
+				t.AppendRow(row)
+			}
 		}
 
 		t.Render()
@@ -85,6 +98,49 @@ func listRecords(client *client.DataverseClient, args []string) error {
 	return nil
 }
 
+// Returns the logical and display names of the selected fields
+// It gets the formatted field name first, then falls back to the raw field name if not found
+//
+// First return value: display names
+//
+// Second return value: logical names
+func getSelectFields(attributes []models.EntityAttribute, selectedFields string) ([]string, []string) {
+	var logicalNames []string
+	var displayNames []string
+	fields := strings.Split(selectedFields, ",")
+
+	availableAttrs := make(map[string]models.EntityAttribute)
+	for _, attr := range attributes {
+		availableAttrs[attr.LogicalName] = attr
+	}
+
+	const logicalSuffix = "name"
+	const oDataFormattedSuffix = "@OData.Community.Display.V1.FormattedValue"
+
+	for _, field := range fields {
+		field = strings.TrimSpace(field)
+
+		formattedFieldName := field + oDataFormattedSuffix
+		formattedLogicalName := field + logicalSuffix
+
+		if _, found := availableAttrs[formattedLogicalName]; found {
+			displayAttr := availableAttrs[field]
+			logicalNames = append(logicalNames, formattedFieldName)
+			displayNames = append(displayNames, displayAttr.DisplayName)
+		} else if attr, found := availableAttrs[field]; found {
+			logicalNames = append(logicalNames, attr.LogicalName)
+			displayNames = append(displayNames, attr.DisplayName)
+		}
+	}
+
+	return displayNames, logicalNames
+}
+
+// Returns a generic table structure for display and logical names
+//
+// First return value: display names
+//
+// Second return value: logical names
 func getGenericTableStructures(attributes []models.EntityAttribute) (models.GenericTableStructure, models.GenericTableStructure) {
 	displayStructure := models.GenericTableStructure{Id: "ID", CreatedOn: "Created On", State: "State", Owner: "Owner"}
 	logicalStructure := models.GenericTableStructure{CreatedOn: "createdon", State: "statecode@OData.Community.Display.V1.FormattedValue", Owner: "_ownerid_value@OData.Community.Display.V1.FormattedValue"}
