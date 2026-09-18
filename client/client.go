@@ -25,7 +25,7 @@ func NewDataverseClient(baseURL string, token string, timeout time.Duration) *Da
 		ApiURL:         strings.TrimRight(baseURL, "/") + "/api/data/v9.2",
 		Token:          token,
 		RequestTimeout: timeout,
-		HTTP:           &http.Client{},
+		HTTP:           &http.Client{Timeout: timeout},
 	}
 }
 
