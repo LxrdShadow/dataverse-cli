@@ -12,3 +12,5 @@ type APIError struct {
 func (e APIError) Error() string {
 	return e.Message
 }
+
+var ErrUnauthorized = APIError{Code: "Unauthorized", Message: "unauthorized"}

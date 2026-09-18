@@ -36,7 +36,7 @@ func (client *DataverseClient) get(url string, headers map[string]string) ([]byt
 func (client *DataverseClient) request(method string, url string, headers map[string]string) ([]byte, error) {
 	request, err := http.NewRequest(method, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to build request: %w", err)
 	}
 
 	request.Header.Set("Authorization", "Bearer "+client.Token)
@@ -63,12 +63,12 @@ func (client *DataverseClient) request(method string, url string, headers map[st
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		if response.StatusCode == 401 {
-			return nil, fmt.Errorf("Unauthorized")
+			return nil, errors.ErrUnauthorized
 		}
 
 		var errorResponse errors.ErrorResponse
 		if err := json.Unmarshal(body, &errorResponse); err == nil {
-			return body, fmt.Errorf("%s", errorResponse.ErrorValue.Message)
+			return body, errorResponse.ErrorValue
 		}
 		return body, fmt.Errorf("Unexpected status code: %d", response.StatusCode)
 	}
