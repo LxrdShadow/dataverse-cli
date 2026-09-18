@@ -292,7 +292,7 @@ func parseOptions(args []string) (models.ListOptions, error) {
 			err = parseIntFlag(&options.Top, args[i], &i)
 		case "--max-page-size":
 			err = parseIntFlag(&options.MaxPageSize, args[i], &i)
-		case "--output":
+		case "--output", "-o":
 			if err = parseStringFlag(&rawFormat, args[i], &i); err != nil {
 				break
 			}
@@ -320,12 +320,12 @@ func listUsage() string {
 	return `Usage: dvc list <table> [options]
 
 Options:
-  -h, --help                 Show this help message
-  --select <columns>         Select columns to retrieve and display (default: common columns)
-  --filter <condition>       Filter rows based on an OData condition
-  --order-by <column>       Order rows by a specific column
-  --expand <columns>         Expand related columns
-  --top <count>              Limit the total number of rows returned
-  --max-page-size <count>    Limit the number of rows per query page
-  --output <format>          Output format (default: table, possible values: json, table)`
+  -h, --help				Show this help message
+  --select <columns>			Select columns to retrieve and display (default: common columns)
+  --filter <condition>			Filter rows based on an OData condition
+  --order-by <column>			Order rows by a specific column
+  --expand <columns>			Expand related columns
+  --top <count>				Limit the total number of rows returned
+  --max-page-size <count>		Limit the number of rows per query page
+  -o --output <format>			Output format (default: table, possible values: json, table)`
 }
