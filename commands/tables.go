@@ -4,7 +4,6 @@ import (
 	"dvc/client"
 	"dvc/models"
 	"fmt"
-	"os"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -36,12 +35,11 @@ func tables(client *client.DataverseClient, args []string) error {
 		return nil
 	}
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Logical Name", "Display Name", "Is Custom", "Is Managed"})
+	headerRow := table.Row{"Logical Name", "Display Name", "Is Custom", "Is Managed"}
 
+	rows := make([]table.Row, 0, len(entities))
 	for _, entity := range entities {
-		t.AppendRow(table.Row{
+		rows = append(rows, table.Row{
 			entity.LogicalName,
 			entity.DisplayName,
 			entity.IsCustom,
@@ -49,7 +47,7 @@ func tables(client *client.DataverseClient, args []string) error {
 		})
 	}
 
-	t.Render()
+	printTable(headerRow, rows)
 
 	fmt.Printf("Retrieved %d tables.\n", len(entities))
 
