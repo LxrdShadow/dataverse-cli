@@ -4,7 +4,6 @@ import (
 	"dvc/client"
 	"dvc/models"
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -17,20 +16,19 @@ var ListCommand = &Command{
 }
 
 func listRecords(client *client.DataverseClient, args []string) error {
-	if len(args) == 0 || slices.Contains(args, "-h") || slices.Contains(args, "--help") {
+	if len(args) == 0 || args[0] == "-h" || args[0] == "--help" {
 		fmt.Println(listUsage())
 		return nil
 	}
 
 	logicalName := args[0]
 	optionArgs := args[1:]
-
-	entity, err := client.GetTable(logicalName, true)
+	listOptions, err := parseOptions(optionArgs)
 	if err != nil {
 		return err
 	}
 
-	listOptions, err := parseOptions(optionArgs)
+	entity, err := client.GetTable(logicalName, true)
 	if err != nil {
 		return err
 	}
