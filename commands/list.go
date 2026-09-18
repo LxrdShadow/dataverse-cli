@@ -36,7 +36,7 @@ func listRecords(client *client.DataverseClient, args []string) error {
 	}
 
 	if listOptions.Query.Select == "" && listOptions.Output == models.OutputFormatTable {
-		_, defaultFields := getDefaultTableFields(entity.Attributes)
+		defaultFields := getDefaultTableFields(entity.Attributes)
 
 		queryFields := make([]string, 0, len(defaultFields))
 		for _, field := range defaultFields {

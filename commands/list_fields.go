@@ -84,7 +84,7 @@ func getRecordFieldName(attr models.EntityAttribute) string {
 
 func getDefaultTableFields(
 	attributes []models.EntityAttribute,
-) ([]TableField, []TableField) {
+) []TableField {
 	var fields []TableField
 
 	for _, attr := range attributes {
@@ -126,5 +126,5 @@ func getDefaultTableFields(
 		}
 	}
 
-	return fields, fields
+	return fields
 }
