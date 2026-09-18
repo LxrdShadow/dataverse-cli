@@ -128,6 +128,7 @@ func extractEntityAttributes(rawAttributes []models.RawEntityAttribute) []models
 			IsPrimaryName: attr.IsPrimaryName,
 			IsPrimaryId:   attr.IsPrimaryId,
 			IsLogical:     attr.IsLogical,
+			AttributeType: attr.AttributeType,
 		})
 	}
 	return attributes

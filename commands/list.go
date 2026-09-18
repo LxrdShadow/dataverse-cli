@@ -38,6 +38,17 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
+	if listOptions.Query.Select == "" && listOptions.Output == models.OutputFormatTable {
+		_, defaultFields := getDefaultTableFields(entity.Attributes)
+
+		queryFields := make([]string, 0, len(defaultFields))
+		for _, field := range defaultFields {
+			queryFields = append(queryFields, field.QueryName)
+		}
+
+		listOptions.Query.Select = strings.Join(queryFields, ",")
+	}
+
 	records, err := client.ListRecords(entity.EntitySetName, listOptions)
 	if err != nil {
 		return fmt.Errorf("failed to list records: %w", err)
@@ -50,111 +61,187 @@ func listRecords(client *client.DataverseClient, args []string) error {
 
 	switch listOptions.Output {
 	case models.OutputFormatJSON:
-		prettyJSON, err := json.MarshalIndent(records, "", "  ")
-		if err != nil {
-			return fmt.Errorf("failed to marshal JSON: %w", err)
-		}
-		fmt.Println(string(prettyJSON))
+		err = renderJSON(records)
 	case models.OutputFormatTable:
-		t := table.NewWriter()
-		t.SetOutputMirror(os.Stdout)
-		attributes := entity.Attributes
-		headerRow := table.Row{}
+		err = renderTable(entity.Attributes, listOptions.Query.Select, records)
+	default:
+		err = fmt.Errorf("unsupported output format: %s", listOptions.Output)
+	}
 
-		if listOptions.Query.Select == "" {
-			displayStructure, logicalStructure := getGenericTableStructures(attributes)
+	fmt.Printf("Retrieved %d records\n", len(records))
 
-			headerRow = table.Row{displayStructure.Id, displayStructure.PrimaryName, displayStructure.CreatedOn, displayStructure.State, displayStructure.Owner}
-			t.AppendHeader(headerRow)
-
-			for _, record := range records {
-				t.AppendRow(table.Row{
-					record[logicalStructure.Id],
-					record[logicalStructure.PrimaryName],
-					record[logicalStructure.CreatedOn],
-					record[logicalStructure.State],
-					record[logicalStructure.Owner],
-				})
-			}
-		} else {
-			displayNames, logicalNames := getSelectFields(attributes, listOptions.Query.Select)
-			for _, name := range displayNames {
-				headerRow = append(headerRow, name)
-			}
-			t.AppendHeader(headerRow)
-
-			for _, record := range records {
-				row := table.Row{}
-				for _, name := range logicalNames {
-					row = append(row, record[name])
-				}
-				t.AppendRow(row)
-			}
-		}
-
-		t.Render()
+	if err != nil {
+		return fmt.Errorf("failed to render output: %w", err)
 	}
 
 	return nil
 }
 
-// Returns the logical and display names of the selected fields
-// It gets the formatted field name first, then falls back to the raw field name if not found
-//
-// First return value: display names
-//
-// Second return value: logical names
-func getSelectFields(attributes []models.EntityAttribute, selectedFields string) ([]string, []string) {
-	var logicalNames []string
-	var displayNames []string
-	fields := strings.Split(selectedFields, ",")
-
-	availableAttrs := make(map[string]models.EntityAttribute)
-	for _, attr := range attributes {
-		availableAttrs[attr.LogicalName] = attr
+func renderJSON(records []models.Record) error {
+	prettyJSON, err := json.MarshalIndent(records, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	const logicalSuffix = "name"
-	const oDataFormattedSuffix = "@OData.Community.Display.V1.FormattedValue"
+	fmt.Println(string(prettyJSON))
 
-	for _, field := range fields {
-		field = strings.TrimSpace(field)
-
-		formattedFieldName := field + oDataFormattedSuffix
-		formattedLogicalName := field + logicalSuffix
-
-		if _, found := availableAttrs[formattedLogicalName]; found {
-			displayAttr := availableAttrs[field]
-			logicalNames = append(logicalNames, formattedFieldName)
-			displayNames = append(displayNames, displayAttr.DisplayName)
-		} else if attr, found := availableAttrs[field]; found {
-			logicalNames = append(logicalNames, attr.LogicalName)
-			displayNames = append(displayNames, attr.DisplayName)
-		}
-	}
-
-	return displayNames, logicalNames
+	return nil
 }
 
-// Returns a generic table structure for display and logical names
-//
-// First return value: display names
-//
-// Second return value: logical names
-func getGenericTableStructures(attributes []models.EntityAttribute) (models.GenericTableStructure, models.GenericTableStructure) {
-	displayStructure := models.GenericTableStructure{Id: "ID", CreatedOn: "Created On", State: "State", Owner: "Owner"}
-	logicalStructure := models.GenericTableStructure{CreatedOn: "createdon", State: "statecode@OData.Community.Display.V1.FormattedValue", Owner: "_ownerid_value@OData.Community.Display.V1.FormattedValue"}
+func renderTable(
+	attributes []models.EntityAttribute,
+	selectedFields string,
+	records []models.Record,
+) error {
+	fields := getSelectFields(attributes, selectedFields)
+
+	if len(fields) == 0 {
+		return fmt.Errorf("none of the selected columns exist on the table")
+	}
+
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+
+	headerRow := table.Row{}
+
+	for _, field := range fields {
+		headerRow = append(headerRow, field.DisplayName)
+	}
+
+	t.AppendHeader(headerRow)
+
+	for _, record := range records {
+		row := table.Row{}
+
+		for _, field := range fields {
+			value := record[field.RecordName]
+			row = append(row, value)
+		}
+
+		t.AppendRow(row)
+	}
+
+	t.Render()
+
+	return nil
+}
+
+func getMetadataFieldName(fieldName string) string {
+	switch {
+	case strings.HasPrefix(fieldName, "_") &&
+		strings.HasSuffix(fieldName, "_value"):
+		return strings.TrimSuffix(
+			strings.TrimPrefix(fieldName, "_"),
+			"_value",
+		)
+
+	default:
+		return fieldName
+	}
+}
+
+func getQueryFieldName(attr models.EntityAttribute) string {
+	switch attr.AttributeType {
+	case models.AttributeTypeOwner:
+		return "_" + attr.LogicalName + "_value"
+
+	default:
+		return attr.LogicalName
+	}
+}
+
+func getSelectFields(attributes []models.EntityAttribute, selectedFields string) []models.TableField {
+	var fields []models.TableField
+
+	availableAttributes := make(map[string]models.EntityAttribute)
+	for _, attr := range attributes {
+		availableAttributes[attr.LogicalName] = attr
+	}
+
+	selected := strings.SplitSeq(selectedFields, ",")
+	for fieldName := range selected {
+		fieldName = strings.TrimSpace(fieldName)
+		if fieldName == "" {
+			continue
+		}
+
+		metadataName := getMetadataFieldName(fieldName)
+		attr, found := availableAttributes[metadataName]
+		if !found {
+			continue
+		}
+
+		fields = append(fields, models.TableField{
+			DisplayName: attr.DisplayName,
+			QueryName:   getQueryFieldName(attr),
+			RecordName:  getRecordFieldName(attr),
+		})
+	}
+	return fields
+}
+
+func getRecordFieldName(attr models.EntityAttribute) string {
+	const formattedSuffix = "@OData.Community.Display.V1.FormattedValue"
+
+	switch attr.AttributeType {
+	case models.AttributeTypeOwner:
+		return "_ownerid_value" + formattedSuffix
+
+	case models.AttributeTypePicklist,
+		models.AttributeTypeState,
+		models.AttributeTypeDateTime:
+		return attr.LogicalName + formattedSuffix
+
+	default:
+		return attr.LogicalName
+	}
+}
+
+func getDefaultTableFields(
+	attributes []models.EntityAttribute,
+) ([]models.TableField, []models.TableField) {
+	var fields []models.TableField
 
 	for _, attr := range attributes {
-		if attr.IsPrimaryName {
-			displayStructure.PrimaryName = attr.DisplayName
-			logicalStructure.PrimaryName = attr.LogicalName
-		} else if attr.IsPrimaryId && !attr.IsLogical {
-			logicalStructure.Id = attr.LogicalName
+		switch {
+		case attr.IsPrimaryId && !attr.IsLogical:
+			fields = append(fields, models.TableField{
+				DisplayName: "ID",
+				QueryName:   attr.LogicalName,
+				RecordName:  attr.LogicalName,
+			})
+
+		case attr.IsPrimaryName:
+			fields = append(fields, models.TableField{
+				DisplayName: attr.DisplayName,
+				QueryName:   attr.LogicalName,
+				RecordName:  attr.LogicalName,
+			})
+
+		case attr.LogicalName == "createdon":
+			fields = append(fields, models.TableField{
+				DisplayName: "Created On",
+				QueryName:   attr.LogicalName,
+				RecordName:  getRecordFieldName(attr),
+			})
+
+		case attr.LogicalName == "statecode":
+			fields = append(fields, models.TableField{
+				DisplayName: "State",
+				QueryName:   attr.LogicalName,
+				RecordName:  getRecordFieldName(attr),
+			})
+
+		case attr.LogicalName == "ownerid":
+			fields = append(fields, models.TableField{
+				DisplayName: "Owner",
+				QueryName:   getQueryFieldName(attr),
+				RecordName:  getRecordFieldName(attr),
+			})
 		}
 	}
 
-	return displayStructure, logicalStructure
+	return fields, fields
 }
 
 func parseOptions(args []string) (models.ListOptions, error) {
@@ -194,26 +281,25 @@ func parseOptions(args []string) (models.ListOptions, error) {
 		var err error
 		switch args[i] {
 		case "--select":
-			err = parseStringFlag(&options.Select, "--select", &i)
-			options.Select = strings.ReplaceAll(options.Select, " ", "")
+			err = parseStringFlag(&options.Select, args[i], &i)
 		case "--filter":
-			err = parseStringFlag(&options.Filter, "--filter", &i)
+			err = parseStringFlag(&options.Filter, args[i], &i)
 		case "--order-by":
-			err = parseStringFlag(&options.OrderBy, "--order-by", &i)
+			err = parseStringFlag(&options.OrderBy, args[i], &i)
 		case "--expand":
-			err = parseStringFlag(&options.Expand, "--expand", &i)
+			err = parseStringFlag(&options.Expand, args[i], &i)
 		case "--top":
-			err = parseIntFlag(&options.Top, "--top", &i)
+			err = parseIntFlag(&options.Top, args[i], &i)
 		case "--max-page-size":
-			err = parseIntFlag(&options.MaxPageSize, "--max-page-size", &i)
+			err = parseIntFlag(&options.MaxPageSize, args[i], &i)
 		case "--output":
 			if err = parseStringFlag(&rawFormat, args[i], &i); err != nil {
 				break
 			}
 			switch strings.ToLower(rawFormat) {
-			case "json":
+			case string(models.OutputFormatJSON):
 				format = models.OutputFormatJSON
-			case "table":
+			case string(models.OutputFormatTable):
 				format = models.OutputFormatTable
 			default:
 				return models.ListOptions{}, fmt.Errorf("invalid output format %q (allowed: json, table)", rawFormat)
@@ -234,12 +320,12 @@ func listUsage() string {
 	return `Usage: dvc list <table> [options]
 
 Options:
-  -h, --help 			Show this help message
-  --select <columns>  		Select specific columns to display (default: all, comma-separated)
-  --filter <condition> 		Filter rows based on a condition (default: none)
-  --order-by <column> 		Order rows by a specific column
-  --expand <columns> 		Expand specific columns to display
-  --top <count>     		Limit the number of rows to display
-  --max-page-size <count> 	Limit the number of rows per query page (pagination)
-`
+  -h, --help                 Show this help message
+  --select <columns>         Select columns to retrieve and display (default: common columns)
+  --filter <condition>       Filter rows based on an OData condition
+  --order-by <column>       Order rows by a specific column
+  --expand <columns>         Expand related columns
+  --top <count>              Limit the total number of rows returned
+  --max-page-size <count>    Limit the number of rows per query page
+  --output <format>          Output format (default: table, possible values: json, table)`
 }

@@ -50,12 +50,22 @@ type EntityAttributesResponse struct {
 	Value []RawEntityAttribute `json:"value"`
 }
 
+type AttributeType string
+
+const (
+	AttributeTypePicklist AttributeType = "Picklist"
+	AttributeTypeState    AttributeType = "State"
+	AttributeTypeOwner    AttributeType = "Owner"
+	AttributeTypeDateTime AttributeType = "DateTime"
+)
+
 type RawEntityAttribute struct {
-	LogicalName   string      `json:"LogicalName"`
-	DisplayName   DisplayName `json:"DisplayName"`
-	IsPrimaryName bool        `json:"IsPrimaryName"`
-	IsPrimaryId   bool        `json:"IsPrimaryId"`
-	IsLogical     bool        `json:"IsLogical"`
+	LogicalName   string        `json:"LogicalName"`
+	DisplayName   DisplayName   `json:"DisplayName"`
+	IsPrimaryName bool          `json:"IsPrimaryName"`
+	IsPrimaryId   bool          `json:"IsPrimaryId"`
+	IsLogical     bool          `json:"IsLogical"`
+	AttributeType AttributeType `json:"AttributeType"`
 }
 
 type EntityAttribute struct {
@@ -64,6 +74,7 @@ type EntityAttribute struct {
 	IsPrimaryName bool
 	IsPrimaryId   bool
 	IsLogical     bool
+	AttributeType AttributeType
 }
 
 type GenericTableStructure struct {
@@ -72,4 +83,10 @@ type GenericTableStructure struct {
 	CreatedOn   string
 	State       string
 	Owner       string
+}
+
+type TableField struct {
+	DisplayName string
+	QueryName   string
+	RecordName  string
 }
