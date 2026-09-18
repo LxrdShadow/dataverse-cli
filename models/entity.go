@@ -1,17 +1,6 @@
 package models
 
-type EntityDefinitionsResponse struct {
-	Value []EntityDefinition `json:"value"`
-}
-
-type EntityDefinition struct {
-	LogicalName    string               `json:"LogicalName"`
-	EntitySetName  string               `json:"EntitySetName"`
-	DisplayName    DisplayName          `json:"DisplayName"`
-	IsCustomEntity bool                 `json:"IsCustomEntity"`
-	IsManaged      bool                 `json:"IsManaged"`
-	Attributes     []RawEntityAttribute `json:"Attributes"`
-}
+import "encoding/json/v2"
 
 type DisplayName struct {
 	UserLocalizedLabel LocalizedLabel `json:"UserLocalizedLabel"`
@@ -30,24 +19,27 @@ type Entity struct {
 	Attributes    []EntityAttribute
 }
 
-type TableScope string
+func (e *Entity) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		LogicalName    string
+		EntitySetName  string
+		DisplayName    DisplayName
+		IsCustomEntity bool
+		IsManaged      bool
+		Attributes     []EntityAttribute
+	}
 
-const (
-	TableScopeAll    TableScope = "all"
-	TableScopeCustom TableScope = "custom"
-	TableScopeSystem TableScope = "system"
-)
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
 
-type TableManagement string
-
-const (
-	TableManagementAll       TableManagement = "all"
-	TableManagementManaged   TableManagement = "managed"
-	TableManagementUnmanaged TableManagement = "unmanaged"
-)
-
-type EntityAttributesResponse struct {
-	Value []RawEntityAttribute `json:"value"`
+	e.LogicalName = raw.LogicalName
+	e.EntitySetName = raw.EntitySetName
+	e.DisplayName = raw.DisplayName.UserLocalizedLabel.Label
+	e.IsCustom = raw.IsCustomEntity
+	e.IsManaged = raw.IsManaged
+	e.Attributes = raw.Attributes
+	return nil
 }
 
 type AttributeType string
@@ -59,15 +51,6 @@ const (
 	AttributeTypeDateTime AttributeType = "DateTime"
 )
 
-type RawEntityAttribute struct {
-	LogicalName   string        `json:"LogicalName"`
-	DisplayName   DisplayName   `json:"DisplayName"`
-	IsPrimaryName bool          `json:"IsPrimaryName"`
-	IsPrimaryId   bool          `json:"IsPrimaryId"`
-	IsLogical     bool          `json:"IsLogical"`
-	AttributeType AttributeType `json:"AttributeType"`
-}
-
 type EntityAttribute struct {
 	LogicalName   string
 	DisplayName   string
@@ -77,16 +60,25 @@ type EntityAttribute struct {
 	AttributeType AttributeType
 }
 
-type GenericTableStructure struct {
-	Id          string
-	PrimaryName string
-	CreatedOn   string
-	State       string
-	Owner       string
-}
+func (a *EntityAttribute) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		LogicalName   string
+		DisplayName   DisplayName
+		IsPrimaryName bool
+		IsPrimaryId   bool
+		IsLogical     bool
+		AttributeType AttributeType
+	}
 
-type TableField struct {
-	DisplayName string
-	QueryName   string
-	RecordName  string
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	a.LogicalName = raw.LogicalName
+	a.DisplayName = raw.DisplayName.UserLocalizedLabel.Label
+	a.IsPrimaryName = raw.IsPrimaryName
+	a.IsPrimaryId = raw.IsPrimaryId
+	a.IsLogical = raw.IsLogical
+	a.AttributeType = raw.AttributeType
+	return nil
 }

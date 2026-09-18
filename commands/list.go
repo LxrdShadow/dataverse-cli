@@ -19,6 +19,12 @@ var ListCommand = &Command{
 	Run:         listRecords,
 }
 
+type TableField struct {
+	DisplayName string
+	QueryName   string
+	RecordName  string
+}
+
 func listRecords(client *client.DataverseClient, args []string) error {
 	if len(args) == 0 || slices.Contains(args, "-h") || slices.Contains(args, "--help") {
 		fmt.Println(listUsage())
@@ -148,8 +154,8 @@ func getQueryFieldName(attr models.EntityAttribute) string {
 	}
 }
 
-func getSelectFields(attributes []models.EntityAttribute, selectedFields string) []models.TableField {
-	var fields []models.TableField
+func getSelectFields(attributes []models.EntityAttribute, selectedFields string) []TableField {
+	var fields []TableField
 
 	availableAttributes := make(map[string]models.EntityAttribute)
 	for _, attr := range attributes {
@@ -169,7 +175,7 @@ func getSelectFields(attributes []models.EntityAttribute, selectedFields string)
 			continue
 		}
 
-		fields = append(fields, models.TableField{
+		fields = append(fields, TableField{
 			DisplayName: attr.DisplayName,
 			QueryName:   getQueryFieldName(attr),
 			RecordName:  getRecordFieldName(attr),
@@ -197,41 +203,41 @@ func getRecordFieldName(attr models.EntityAttribute) string {
 
 func getDefaultTableFields(
 	attributes []models.EntityAttribute,
-) ([]models.TableField, []models.TableField) {
-	var fields []models.TableField
+) ([]TableField, []TableField) {
+	var fields []TableField
 
 	for _, attr := range attributes {
 		switch {
 		case attr.IsPrimaryId && !attr.IsLogical:
-			fields = append(fields, models.TableField{
+			fields = append(fields, TableField{
 				DisplayName: "ID",
 				QueryName:   attr.LogicalName,
 				RecordName:  attr.LogicalName,
 			})
 
 		case attr.IsPrimaryName:
-			fields = append(fields, models.TableField{
+			fields = append(fields, TableField{
 				DisplayName: attr.DisplayName,
 				QueryName:   attr.LogicalName,
 				RecordName:  attr.LogicalName,
 			})
 
 		case attr.LogicalName == "createdon":
-			fields = append(fields, models.TableField{
+			fields = append(fields, TableField{
 				DisplayName: "Created On",
 				QueryName:   attr.LogicalName,
 				RecordName:  getRecordFieldName(attr),
 			})
 
 		case attr.LogicalName == "statecode":
-			fields = append(fields, models.TableField{
+			fields = append(fields, TableField{
 				DisplayName: "State",
 				QueryName:   attr.LogicalName,
 				RecordName:  getRecordFieldName(attr),
 			})
 
 		case attr.LogicalName == "ownerid":
-			fields = append(fields, models.TableField{
+			fields = append(fields, TableField{
 				DisplayName: "Owner",
 				QueryName:   getQueryFieldName(attr),
 				RecordName:  getRecordFieldName(attr),

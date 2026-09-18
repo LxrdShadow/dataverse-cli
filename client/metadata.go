@@ -18,22 +18,14 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 		return nil, err
 	}
 
-	var response models.EntityDefinitionsResponse
+	var response struct {
+		Value []models.Entity `json:"value"`
+	}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, err
 	}
 
-	var entities []models.Entity
-	for _, definition := range response.Value {
-		entities = append(entities, models.Entity{
-			LogicalName:   definition.LogicalName,
-			DisplayName:   definition.DisplayName.UserLocalizedLabel.Label,
-			EntitySetName: definition.EntitySetName,
-			IsCustom:      definition.IsCustomEntity,
-			IsManaged:     definition.IsManaged,
-		})
-	}
-	return entities, nil
+	return response.Value, nil
 }
 
 func (client *DataverseClient) GetTable(logicalName string, includeAttributes bool) (*models.Entity, error) {
@@ -45,7 +37,9 @@ func (client *DataverseClient) GetTable(logicalName string, includeAttributes bo
 		return nil, err
 	}
 
-	var response models.EntityDefinitionsResponse
+	var response struct {
+		Value []models.Entity `json:"value"`
+	}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, err
 	}
@@ -58,16 +52,7 @@ func (client *DataverseClient) GetTable(logicalName string, includeAttributes bo
 		return nil, fmt.Errorf("%s", message)
 	}
 
-	entity := &models.Entity{
-		LogicalName:   response.Value[0].LogicalName,
-		DisplayName:   response.Value[0].DisplayName.UserLocalizedLabel.Label,
-		EntitySetName: response.Value[0].EntitySetName,
-		IsCustom:      response.Value[0].IsCustomEntity,
-		IsManaged:     response.Value[0].IsManaged,
-		Attributes:    extractEntityAttributes(response.Value[0].Attributes),
-	}
-
-	return entity, nil
+	return &response.Value[0], nil
 }
 
 func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]models.EntityAttribute, error) {
@@ -79,13 +64,14 @@ func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]model
 		return nil, err
 	}
 
-	var response models.EntityAttributesResponse
+	var response struct {
+		Value []models.EntityAttribute `json:"Attributes"`
+	}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, err
 	}
 
-	attributes := extractEntityAttributes(response.Value)
-	return attributes, nil
+	return response.Value, nil
 }
 
 func buildEntityListURL(baseURL string, scope models.TableScope, management models.TableManagement, includeAttributes bool, customFilters []string) string {
@@ -117,19 +103,4 @@ func buildEntityListURL(baseURL string, scope models.TableScope, management mode
 	}
 
 	return baseURL + "/EntityDefinitions?" + query.Encode()
-}
-
-func extractEntityAttributes(rawAttributes []models.RawEntityAttribute) []models.EntityAttribute {
-	var attributes []models.EntityAttribute
-	for _, attr := range rawAttributes {
-		attributes = append(attributes, models.EntityAttribute{
-			LogicalName:   attr.LogicalName,
-			DisplayName:   attr.DisplayName.UserLocalizedLabel.Label,
-			IsPrimaryName: attr.IsPrimaryName,
-			IsPrimaryId:   attr.IsPrimaryId,
-			IsLogical:     attr.IsLogical,
-			AttributeType: attr.AttributeType,
-		})
-	}
-	return attributes
 }
