@@ -45,11 +45,7 @@ func (client *DataverseClient) GetTable(logicalName string, includeAttributes bo
 	}
 
 	if len(response.Value) == 0 {
-		message := fmt.Sprintf("entity '%s' not found", logicalName)
-		if len(logicalName) > 0 && logicalName[len(logicalName)-1] == 's' {
-			message = fmt.Sprintf("%s. Did you mean '%s'?", message, logicalName[:len(logicalName)-1])
-		}
-		return nil, fmt.Errorf("%s", message)
+		return nil, fmt.Errorf("entity '%s' not found", logicalName)
 	}
 
 	return &response.Value[0], nil

@@ -3,6 +3,7 @@ package client
 import (
 	"dvc/models"
 	"encoding/json"
+	"fmt"
 )
 
 func (client *DataverseClient) WhoAmI() (models.WhoAmIResponse, error) {
@@ -15,7 +16,7 @@ func (client *DataverseClient) WhoAmI() (models.WhoAmIResponse, error) {
 
 	var responseBody models.WhoAmIResponse
 	if err := json.Unmarshal(body, &responseBody); err != nil {
-		return models.WhoAmIResponse{}, err
+		return models.WhoAmIResponse{}, fmt.Errorf("failed to parse response: %w", err)
 	}
 
 	return responseBody, nil
