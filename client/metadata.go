@@ -127,6 +127,7 @@ func extractEntityAttributes(rawAttributes []models.RawEntityAttribute) []models
 			DisplayName:   attr.DisplayName.UserLocalizedLabel.Label,
 			IsPrimaryName: attr.IsPrimaryName,
 			IsPrimaryId:   attr.IsPrimaryId,
+			IsLogical:     attr.IsLogical,
 		})
 	}
 	return attributes

@@ -87,16 +87,14 @@ func listRecords(client *client.DataverseClient, args []string) error {
 
 func getGenericTableStructures(attributes []models.EntityAttribute) (models.GenericTableStructure, models.GenericTableStructure) {
 	displayStructure := models.GenericTableStructure{Id: "ID", CreatedOn: "Created On", State: "State", Owner: "Owner"}
-	logicalStructure := models.GenericTableStructure{CreatedOn: "createdon", State: "state", Owner: "owner"}
+	logicalStructure := models.GenericTableStructure{CreatedOn: "createdon", State: "statecode@OData.Community.Display.V1.FormattedValue", Owner: "_ownerid_value@OData.Community.Display.V1.FormattedValue"}
 
 	for _, attr := range attributes {
 		if attr.IsPrimaryName {
 			displayStructure.PrimaryName = attr.DisplayName
 			logicalStructure.PrimaryName = attr.LogicalName
-		}
-		// TODO: check for AttributeOf (null)
-		if attr.IsPrimaryId {
-			logicalStructure.PrimaryName = attr.LogicalName
+		} else if attr.IsPrimaryId && !attr.IsLogical {
+			logicalStructure.Id = attr.LogicalName
 		}
 	}
 

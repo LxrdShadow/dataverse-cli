@@ -43,6 +43,7 @@ func (client *DataverseClient) request(method string, url string, headers map[st
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("OData-Version", "4.0")
 	request.Header.Set("OData-MaxVersion", "4.0")
+	request.Header.Set("Prefer", "odata.include-annotations=*")
 
 	for key, value := range headers {
 		request.Header.Set(key, value)
