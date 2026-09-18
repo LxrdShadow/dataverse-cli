@@ -9,10 +9,8 @@ type APIError struct {
 	Message string `json:"message"`
 }
 
-func (e ErrorResponse) Error() string {
-	return e.ErrorValue.Error()
-}
-
 func (e APIError) Error() string {
 	return e.Message
 }
+
+var ErrUnauthorized = APIError{Code: "Unauthorized", Message: "unauthorized"}

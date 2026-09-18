@@ -1,6 +1,7 @@
 package config
 
 import (
+	"dvc/constants"
 	"fmt"
 	"os"
 	"time"
@@ -11,8 +12,6 @@ type Config struct {
 	Token   string
 	Timeout time.Duration
 }
-
-var DEFAULT_TIMEOUT = 1 * time.Second
 
 func Load() (Config, error) {
 	// Get the base URL and token from environment variables
@@ -25,6 +24,6 @@ func Load() (Config, error) {
 	return Config{
 		BaseURL: baseURL,
 		Token:   token,
-		Timeout: DEFAULT_TIMEOUT,
+		Timeout: constants.DefaultTimeout,
 	}, nil
 }

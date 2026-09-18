@@ -3,8 +3,9 @@ package commands
 import (
 	"dvc/client"
 	"dvc/models"
+	"errors"
+	"flag"
 	"fmt"
-	"os"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -23,12 +24,15 @@ var TablesCommand = &Command{
 func tables(client *client.DataverseClient, args []string) error {
 	filters, err := parseTableFilters(args)
 	if err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
 		return err
 	}
 
 	entities, err := client.ListTables(filters.Scope, filters.Management)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch table list: %w", err)
 	}
 
 	if len(entities) == 0 {
@@ -36,12 +40,11 @@ func tables(client *client.DataverseClient, args []string) error {
 		return nil
 	}
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Logical Name", "Display Name", "Is Custom", "Is Managed"})
+	headerRow := table.Row{"Logical Name", "Display Name", "Is Custom", "Is Managed"}
 
+	rows := make([]table.Row, 0, len(entities))
 	for _, entity := range entities {
-		t.AppendRow(table.Row{
+		rows = append(rows, table.Row{
 			entity.LogicalName,
 			entity.DisplayName,
 			entity.IsCustom,
@@ -49,7 +52,7 @@ func tables(client *client.DataverseClient, args []string) error {
 		})
 	}
 
-	t.Render()
+	printTable(headerRow, rows)
 
 	fmt.Printf("Retrieved %d tables.\n", len(entities))
 
@@ -57,41 +60,47 @@ func tables(client *client.DataverseClient, args []string) error {
 }
 
 func parseTableFilters(args []string) (TableFilters, error) {
-	filters := TableFilters{
-		Scope:      models.TableScopeAll,
-		Management: models.TableManagementAll,
+	fs := flag.NewFlagSet("tables", flag.ContinueOnError)
+	var custom, system, managed, unmanaged bool
+	fs.BoolVar(&custom, "custom", false, "")
+	fs.BoolVar(&system, "system", false, "")
+	fs.BoolVar(&managed, "managed", false, "")
+	fs.BoolVar(&unmanaged, "unmanaged", false, "")
+	fs.Usage = func() { fmt.Println(tablesUsage()) }
+
+	if err := fs.Parse(args); err != nil {
+		return TableFilters{}, err
+	}
+	if custom && system {
+		return TableFilters{}, fmt.Errorf("scope cannot be both system and custom")
+	}
+	if managed && unmanaged {
+		return TableFilters{}, fmt.Errorf("management cannot be both managed and unmanaged")
 	}
 
-	for _, arg := range args {
-		switch arg {
-		case "--custom":
-			if filters.Scope == models.TableScopeSystem {
-				return TableFilters{}, fmt.Errorf("scope cannot be both system and custom")
-			}
-			filters.Scope = models.TableScopeCustom
-
-		case "--system":
-			if filters.Scope == models.TableScopeCustom {
-				return TableFilters{}, fmt.Errorf("scope cannot be both system and custom")
-			}
-			filters.Scope = models.TableScopeSystem
-
-		case "--managed":
-			if filters.Management == models.TableManagementUnmanaged {
-				return TableFilters{}, fmt.Errorf("management cannot be both unmanaged and managed")
-			}
-			filters.Management = models.TableManagementManaged
-
-		case "--unmanaged":
-			if filters.Management == models.TableManagementManaged {
-				return TableFilters{}, fmt.Errorf("management cannot be both unmanaged and managed")
-			}
-			filters.Management = models.TableManagementUnmanaged
-
-		default:
-			return TableFilters{}, fmt.Errorf("unknown option: %s", arg)
-		}
+	filters := TableFilters{Scope: models.TableScopeAll, Management: models.TableManagementAll}
+	if custom {
+		filters.Scope = models.TableScopeCustom
+	} else if system {
+		filters.Scope = models.TableScopeSystem
+	}
+	if managed {
+		filters.Management = models.TableManagementManaged
+	} else if unmanaged {
+		filters.Management = models.TableManagementUnmanaged
 	}
 
 	return filters, nil
+}
+
+func tablesUsage() string {
+	return `Usage:
+  dvc tables [options]
+
+Options:
+  -custom    List custom tables
+  -system    List system tables
+  -managed   List managed tables
+  -unmanaged List unmanaged tables
+  -h, --help Show this help message`
 }

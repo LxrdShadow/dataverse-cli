@@ -22,16 +22,15 @@ func main() {
 	}
 
 	// Load environment variables from .env file
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
 		fmt.Println("Error loading .env file:", err)
-		return
+		os.Exit(1)
 	}
 
 	config, err := config.Load()
 	if err != nil {
 		fmt.Println("Error loading config:", err)
-		return
+		os.Exit(1)
 	}
 
 	// Create a new Dataverse client
@@ -42,12 +41,13 @@ func main() {
 	availableCommands := commands.CommandRegistry
 	if _, ok := availableCommands[command]; !ok {
 		fmt.Println("Unknown command:", command)
-		return
+		os.Exit(1)
 	}
 
 	cmd := availableCommands[command]
-	err = cmd.Execute(client, args[1:])
+	err = cmd.Run(client, args[1:])
 	if err != nil {
 		fmt.Println("Error:", err)
+		os.Exit(1)
 	}
 }
