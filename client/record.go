@@ -9,7 +9,7 @@ import (
 )
 
 func (client *DataverseClient) ListRecords(entitySetName string, options models.ListOptions) ([]models.Record, error) {
-	requestUrl := client.ApiURL + "/" + entitySetName
+	requestUrl := client.APIURL + "/" + entitySetName
 	queryString := getQueryString(options.Query)
 	if queryString != "" {
 		requestUrl += "?" + queryString

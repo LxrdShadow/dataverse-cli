@@ -7,7 +7,3 @@ type Command struct {
 	Description string
 	Run         func(*client.DataverseClient, []string) error
 }
-
-func (c *Command) Execute(client *client.DataverseClient, args []string) error {
-	return c.Run(client, args)
-}

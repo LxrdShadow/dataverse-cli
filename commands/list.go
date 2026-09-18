@@ -64,11 +64,15 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		return renderJSON(records)
 	case models.OutputFormatTable:
 		err = renderTable(entity.Attributes, listOptions.Query.Select, records)
+		if err != nil {
+			return fmt.Errorf("failed to render table: %w", err)
+		}
 		fmt.Printf("Retrieved %d records\n", len(records))
-		return err
 	default:
 		return fmt.Errorf("unsupported output format: %s", listOptions.Output)
 	}
+
+	return nil
 }
 
 func renderJSON(records []models.Record) error {

@@ -46,7 +46,7 @@ func main() {
 	}
 
 	cmd := availableCommands[command]
-	err = cmd.Execute(client, args[1:])
+	err = cmd.Run(client, args[1:])
 	if err != nil {
 		fmt.Println("Error:", err)
 	}

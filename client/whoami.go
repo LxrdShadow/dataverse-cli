@@ -6,7 +6,7 @@ import (
 )
 
 func (client *DataverseClient) WhoAmI() (models.WhoAmIResponse, error) {
-	url := client.ApiURL + "/WhoAmI"
+	url := client.APIURL + "/WhoAmI"
 
 	body, err := client.get(url, nil)
 	if err != nil {

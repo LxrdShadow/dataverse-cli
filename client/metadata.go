@@ -11,7 +11,7 @@ import (
 )
 
 func (client *DataverseClient) ListTables(scope models.TableScope, management models.TableManagement) ([]models.Entity, error) {
-	requestUrl := buildEntityListURL(client.ApiURL, scope, management, false, nil)
+	requestUrl := buildEntityListURL(client.APIURL, scope, management, false, nil)
 
 	body, err := client.get(requestUrl, nil)
 	if err != nil {
@@ -38,7 +38,7 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 
 func (client *DataverseClient) GetTable(logicalName string, includeAttributes bool) (*models.Entity, error) {
 	logicalNameFilter := fmt.Sprintf("LogicalName eq '%s'", logicalName)
-	requestUrl := buildEntityListURL(client.ApiURL, models.TableScopeAll, models.TableManagementAll, includeAttributes, []string{logicalNameFilter})
+	requestUrl := buildEntityListURL(client.APIURL, models.TableScopeAll, models.TableManagementAll, includeAttributes, []string{logicalNameFilter})
 
 	body, err := client.get(requestUrl, nil)
 	if err != nil {
@@ -71,7 +71,7 @@ func (client *DataverseClient) GetTable(logicalName string, includeAttributes bo
 }
 
 func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]models.EntityAttribute, error) {
-	baseURL := client.ApiURL + "/EntityDefinitions" + "(LogicalName='" + logicalName + "')" + "/Attributes"
+	baseURL := client.APIURL + "/EntityDefinitions" + "(LogicalName='" + logicalName + "')" + "/Attributes"
 	url := baseURL + "?$select=" + constants.DefaultAttributesInfo
 
 	body, err := client.get(url, nil)
