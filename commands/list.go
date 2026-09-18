@@ -5,9 +5,12 @@ import (
 	"dvc/models"
 	"encoding/json"
 	"fmt"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 var ListCommand = &Command{
@@ -25,7 +28,7 @@ func listRecords(client *client.DataverseClient, args []string) error {
 	logicalName := args[0]
 	optionArgs := args[1:]
 
-	table, err := client.GetTable(logicalName, true)
+	entity, err := client.GetTable(logicalName, true)
 	if err != nil {
 		return err
 	}
@@ -35,7 +38,7 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
-	records, err := client.ListRecords(table.EntitySetName, listOptions)
+	records, err := client.ListRecords(entity.EntitySetName, listOptions)
 	if err != nil {
 		return fmt.Errorf("failed to list records: %w", err)
 	}
@@ -53,15 +56,51 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		}
 		fmt.Println(string(prettyJSON))
 	case models.OutputFormatTable:
-		attributes := table.Attributes
-		prettyJSON, err := json.MarshalIndent(attributes, "", "  ")
-		if err != nil {
-			return fmt.Errorf("failed to marshal JSON: %w", err)
+		attributes := entity.Attributes
+		// prettyJSON, err := json.MarshalIndent(attributes, "", "  ")
+		// if err != nil {
+		// 	return fmt.Errorf("failed to marshal JSON: %w", err)
+		// }
+		// fmt.Println(string(prettyJSON))
+		displayStructure, logicalStructure := getGenericTableStructures(attributes)
+
+		t := table.NewWriter()
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{displayStructure.Id, displayStructure.PrimaryName, displayStructure.CreatedOn, displayStructure.State, displayStructure.Owner})
+		fmt.Println(logicalStructure)
+
+		for _, record := range records {
+			t.AppendRow(table.Row{
+				record[logicalStructure.Id],
+				record[logicalStructure.PrimaryName],
+				record[logicalStructure.CreatedOn],
+				record[logicalStructure.State],
+				record[logicalStructure.Owner],
+			})
 		}
-		fmt.Println(string(prettyJSON))
+
+		t.Render()
 	}
 
 	return nil
+}
+
+func getGenericTableStructures(attributes []models.EntityAttribute) (models.GenericTableStructure, models.GenericTableStructure) {
+	displayStructure := models.GenericTableStructure{Id: "ID", CreatedOn: "Created On", State: "State", Owner: "Owner"}
+	logicalStructure := models.GenericTableStructure{CreatedOn: "createdon", State: "state", Owner: "owner"}
+
+	for _, attr := range attributes {
+		if attr.IsPrimaryName {
+			displayStructure.PrimaryName = attr.DisplayName
+			logicalStructure.PrimaryName = attr.LogicalName
+		}
+		// TODO: check for AttributeOf (null)
+		if attr.IsPrimaryId {
+			logicalStructure.PrimaryName = attr.LogicalName
+		}
+	}
+
+	return displayStructure, logicalStructure
 }
 
 func parseOptions(args []string) (models.ListOptions, error) {

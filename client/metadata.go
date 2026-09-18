@@ -84,14 +84,7 @@ func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]model
 		return nil, err
 	}
 
-	var attributes []models.EntityAttribute
-	for _, attr := range response.Value {
-		attributes = append(attributes, models.EntityAttribute{
-			LogicalName:   attr.LogicalName,
-			DisplayName:   attr.DisplayName.UserLocalizedLabel.Label,
-			IsPrimaryName: attr.IsPrimaryName,
-		})
-	}
+	attributes := extractEntityAttributes(response.Value)
 	return attributes, nil
 }
 
@@ -133,6 +126,7 @@ func extractEntityAttributes(rawAttributes []models.RawEntityAttribute) []models
 			LogicalName:   attr.LogicalName,
 			DisplayName:   attr.DisplayName.UserLocalizedLabel.Label,
 			IsPrimaryName: attr.IsPrimaryName,
+			IsPrimaryId:   attr.IsPrimaryId,
 		})
 	}
 	return attributes

@@ -54,10 +54,22 @@ type RawEntityAttribute struct {
 	LogicalName   string      `json:"LogicalName"`
 	DisplayName   DisplayName `json:"DisplayName"`
 	IsPrimaryName bool        `json:"IsPrimaryName"`
+	IsPrimaryId   bool        `json:"IsPrimaryId"`
+	IsLogical     bool        `json:"IsLogical"`
 }
 
 type EntityAttribute struct {
-	LogicalName   string `json:"LogicalName"`
-	DisplayName   string `json:"DisplayName"`
-	IsPrimaryName bool   `json:"IsPrimaryName"`
+	LogicalName   string
+	DisplayName   string
+	IsPrimaryName bool
+	IsPrimaryId   bool
+	IsLogical     bool
+}
+
+type GenericTableStructure struct {
+	Id          string
+	PrimaryName string
+	CreatedOn   string
+	State       string
+	Owner       string
 }
