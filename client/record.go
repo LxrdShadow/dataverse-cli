@@ -9,10 +9,10 @@ import (
 )
 
 func (client *DataverseClient) ListRecords(entitySetName string, options models.ListOptions) ([]models.Record, error) {
-	requestUrl := client.APIURL + "/" + entitySetName
-	queryString := getQueryString(options.Query)
-	if queryString != "" {
-		requestUrl += "?" + queryString
+	requestURL := client.endpoint(entitySetName)
+	query := getQueryString(options.Query)
+	if len(query) > 0 {
+		requestURL.RawQuery = query.Encode()
 	}
 
 	headers := make(map[string]string)
@@ -22,8 +22,8 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 
 	var records []models.Record
 
-	for requestUrl != "" {
-		body, err := client.get(requestUrl, headers)
+	for requestURL != nil && requestURL.String() != "" {
+		body, err := client.get(requestURL.String(), headers)
 		if err != nil {
 			return nil, err
 		}
@@ -42,13 +42,20 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 		}
 
 		records = append(records, recordResponse.Value...)
-		requestUrl = recordResponse.NextLink
+		if recordResponse.NextLink != "" {
+			requestURL, err = url.Parse(recordResponse.NextLink)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			requestURL = nil
+		}
 	}
 
 	return records, nil
 }
 
-func getQueryString(options models.QueryOptions) string {
+func getQueryString(options models.QueryOptions) url.Values {
 	query := url.Values{}
 	if len(options.Select) > 0 {
 		query.Set("$select", options.Select)
@@ -65,5 +72,5 @@ func getQueryString(options models.QueryOptions) string {
 	if options.Top != 0 {
 		query.Set("$top", strconv.Itoa(options.Top))
 	}
-	return query.Encode()
+	return query
 }

@@ -6,26 +6,37 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"path"
 	"strings"
 	"time"
 )
 
 type DataverseClient struct {
-	BaseURL        string
-	APIURL         string
+	apiURL         *url.URL
 	Token          string
 	RequestTimeout time.Duration
 	HTTP           *http.Client
 }
 
-func NewDataverseClient(baseURL string, token string, timeout time.Duration) *DataverseClient {
+func NewDataverseClient(baseURL string, token string, timeout time.Duration) (*DataverseClient, error) {
+	parsedURL, err := url.Parse(strings.TrimRight(baseURL, "/") + "/api/data/v9.2")
+	if err != nil {
+		return nil, fmt.Errorf("invalid Dataverse URL: %w", err)
+	}
+
 	return &DataverseClient{
-		BaseURL:        baseURL,
-		APIURL:         strings.TrimRight(baseURL, "/") + "/api/data/v9.2",
+		apiURL:         parsedURL,
 		Token:          token,
 		RequestTimeout: timeout,
 		HTTP:           &http.Client{Timeout: timeout},
-	}
+	}, nil
+}
+
+func (client *DataverseClient) endpoint(parts ...string) *url.URL {
+	endpoint := *client.apiURL
+	endpoint.Path = path.Join(endpoint.Path, path.Join(parts...))
+	return &endpoint
 }
 
 func (client *DataverseClient) get(url string, headers map[string]string) ([]byte, error) {

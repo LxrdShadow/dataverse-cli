@@ -34,7 +34,11 @@ func main() {
 	}
 
 	// Create a new Dataverse client
-	client := client.NewDataverseClient(config.BaseURL, config.Token, config.Timeout)
+	client, err := client.NewDataverseClient(config.BaseURL, config.Token, config.Timeout)
+	if err != nil {
+		fmt.Println("Error creating client:", err)
+		os.Exit(1)
+	}
 
 	// Get the selected command
 	command := args[0]

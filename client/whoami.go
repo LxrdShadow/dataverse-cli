@@ -7,9 +7,9 @@ import (
 )
 
 func (client *DataverseClient) WhoAmI() (models.WhoAmIResponse, error) {
-	url := client.APIURL + "/WhoAmI"
+	url := client.endpoint("WhoAmI")
 
-	body, err := client.get(url, nil)
+	body, err := client.get(url.String(), nil)
 	if err != nil {
 		return models.WhoAmIResponse{}, err
 	}
