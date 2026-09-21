@@ -8,7 +8,3 @@ const (
 
 	DefaultTimeout = 10 * time.Second
 )
-
-var (
-	UniversalAttributesLogicalName = [...]string{"statecodename"}
-)
