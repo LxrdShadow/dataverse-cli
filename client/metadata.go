@@ -11,9 +11,9 @@ import (
 )
 
 func (client *DataverseClient) ListTables(scope models.TableScope, management models.TableManagement) ([]models.Entity, error) {
-	requestUrl := buildEntityListURL(client.endpoint(), scope, management, false, nil)
+	requestURL := buildEntityListURL(client.endpoint(), scope, management, false, nil)
 
-	body, err := client.get(requestUrl, nil)
+	body, err := client.get(requestURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -29,10 +29,10 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 }
 
 func (client *DataverseClient) GetTable(logicalName string, includeAttributes bool) (*models.Entity, error) {
-	logicalNameFilter := fmt.Sprintf("LogicalName eq '%s'", logicalName)
-	requestUrl := buildEntityListURL(client.endpoint(), models.TableScopeAll, models.TableManagementAll, includeAttributes, []string{logicalNameFilter})
+	logicalNameFilter := fmt.Sprintf("LogicalName eq %s", odataStringLiteral(logicalName))
+	requestURL := buildEntityListURL(client.endpoint(), models.TableScopeAll, models.TableManagementAll, includeAttributes, []string{logicalNameFilter})
 
-	body, err := client.get(requestUrl, nil)
+	body, err := client.get(requestURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (client *DataverseClient) GetTable(logicalName string, includeAttributes bo
 }
 
 func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]models.EntityAttribute, error) {
-	requestURL := client.endpoint("EntityDefinitions(LogicalName='"+logicalName+"')", "Attributes")
+	requestURL := client.entityAttributesURL(logicalName)
 	query := requestURL.Query()
 	query.Set("$select", constants.DefaultAttributesInfo)
 	requestURL.RawQuery = query.Encode()
@@ -72,7 +72,19 @@ func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]model
 	return response.Value, nil
 }
 
-func buildEntityListURL(baseURL *url.URL, scope models.TableScope, management models.TableManagement, includeAttributes bool, customFilters []string) string {
+func (client *DataverseClient) entityAttributesURL(logicalName string) *url.URL {
+	endpoint := *client.apiURL
+	endpoint.Path = strings.TrimRight(endpoint.Path, "/") +
+		"/" + entityDefinitionPath(logicalName)
+
+	query := endpoint.Query()
+	query.Set("$select", constants.DefaultAttributesInfo)
+	endpoint.RawQuery = query.Encode()
+
+	return &endpoint
+}
+
+func buildEntityListURL(baseURL *url.URL, scope models.TableScope, management models.TableManagement, includeAttributes bool, customFilters []string) *url.URL {
 	query := baseURL.Query()
 	query.Set("$select", constants.DefaultEntityAttributes)
 
@@ -102,5 +114,5 @@ func buildEntityListURL(baseURL *url.URL, scope models.TableScope, management mo
 
 	requestURL := baseURL.JoinPath("EntityDefinitions")
 	requestURL.RawQuery = query.Encode()
-	return requestURL.String()
+	return requestURL
 }
