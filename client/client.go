@@ -19,7 +19,6 @@ type DataverseClient struct {
 }
 
 func NewDataverseClient(baseURL string, token string, timeout time.Duration) *DataverseClient {
-	// TODO: Setup timeout on HTTP client
 	return &DataverseClient{
 		BaseURL:        baseURL,
 		APIURL:         strings.TrimRight(baseURL, "/") + "/api/data/v9.2",
