@@ -19,3 +19,8 @@ type GetRecordOptions struct {
 	Output       OutputFormat
 	DisplayEmpty bool
 }
+
+type EntityMetadataOptions struct {
+	Output     OutputFormat
+	Attributes bool
+}
