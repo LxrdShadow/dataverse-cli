@@ -3,8 +3,6 @@ package commands
 import (
 	"dvc/client"
 	"dvc/models"
-	"dvc/utils"
-	"flag"
 	"fmt"
 	"strings"
 
@@ -18,9 +16,9 @@ var ListCommand = &Command{
 }
 
 func runListCommand(client *client.DataverseClient, args []string) error {
-	if len(args) == 0 || args[0] == "-h" || args[0] == "--help" {
-		fmt.Println(listUsage())
-		return flag.ErrHelp
+	err := checkArgs(args, listUsage())
+	if err != nil {
+		return err
 	}
 
 	logicalName := args[0]
@@ -87,7 +85,7 @@ func renderTable(
 		row := table.Row{}
 
 		for _, field := range fields {
-			value := utils.ValueOrEmpty(record, field.RecordName)
+			value := valueOrEmpty(record, field.RecordName)
 			row = append(row, value)
 		}
 

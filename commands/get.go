@@ -3,8 +3,6 @@ package commands
 import (
 	"dvc/client"
 	"dvc/models"
-	"dvc/utils"
-	"flag"
 	"fmt"
 	"uuid"
 
@@ -18,15 +16,15 @@ var GetCommand = &Command{
 }
 
 func runGetCommand(client *client.DataverseClient, args []string) error {
-	if len(args) < 2 || args[0] == "-h" || args[0] == "--help" {
-		fmt.Println(getUsage())
-		return flag.ErrHelp
+	err := checkArgsWithMinLength(args, 2, getUsage())
+	if err != nil {
+		return err
 	}
 
 	logicalName := args[0]
 	recordID := args[1]
 
-	_, err := uuid.Parse(recordID)
+	_, err = uuid.Parse(recordID)
 	if err != nil {
 		return fmt.Errorf("invalid record ID: %w", err)
 	}
@@ -83,7 +81,7 @@ func renderFieldValueTable(attributes []models.EntityAttribute, options models.G
 		if value := record[field.RecordName]; value == nil && !options.DisplayEmpty {
 			continue
 		}
-		row := table.Row{field.QueryName, field.DisplayName, utils.ValueOrEmpty(record, field.RecordName)}
+		row := table.Row{field.QueryName, field.DisplayName, valueOrEmpty(record, field.RecordName)}
 		rows = append(rows, row)
 	}
 
@@ -95,6 +93,9 @@ func getUsage() string {
 	return `Usage: dvc get <table> <recordID>
 
 Options:
-	--select <fields>  Comma-separated list of fields to select
-	--output, -o <format>  Output format (json, table) (default: table)`
+  -h, --help			Show this help message
+  --select <fields>  		Comma-separated list of fields to select
+  --output, -o <format>  	Output format (json, table) (default: table)
+  --display-empty  		Display empty values (default: false)
+`
 }
