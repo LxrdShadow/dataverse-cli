@@ -29,7 +29,7 @@ func listRecords(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
-	entity, err := client.GetTable(logicalName, true)
+	entity, err := client.GetEntity(logicalName, true)
 	if err != nil {
 		return err
 	}

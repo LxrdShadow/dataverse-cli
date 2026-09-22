@@ -1,16 +1,16 @@
 package models
 
-type TableScope string
-type TableManagement string
+type EntityScope string
+type EntityManagement string
 
 const (
-	TableScopeAll    TableScope = "all"
-	TableScopeCustom TableScope = "custom"
-	TableScopeSystem TableScope = "system"
+	EntityScopeAll    EntityScope = "all"
+	EntityScopeCustom EntityScope = "custom"
+	EntityScopeSystem EntityScope = "system"
 )
 
 const (
-	TableManagementAll       TableManagement = "all"
-	TableManagementManaged   TableManagement = "managed"
-	TableManagementUnmanaged TableManagement = "unmanaged"
+	EntityManagementAll       EntityManagement = "all"
+	EntityManagementManaged   EntityManagement = "managed"
+	EntityManagementUnmanaged EntityManagement = "unmanaged"
 )

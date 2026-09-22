@@ -11,11 +11,11 @@ func TestParseTableFiltersAll(t *testing.T) {
 	if err != nil {
 		t.Errorf("parseTableFilters() error = %v", err)
 	}
-	if filters.Scope != models.TableScopeAll {
-		t.Errorf("parseTableFilters() = %v, want %v", filters.Scope, models.TableScopeAll)
+	if filters.Scope != models.EntityScopeAll {
+		t.Errorf("parseTableFilters() = %v, want %v", filters.Scope, models.EntityScopeAll)
 	}
-	if filters.Management != models.TableManagementAll {
-		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.TableManagementAll)
+	if filters.Management != models.EntityManagementAll {
+		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.EntityManagementAll)
 	}
 }
 
@@ -24,11 +24,11 @@ func TestParseTableFilters(t *testing.T) {
 	if err != nil {
 		t.Errorf("parseTableFilters() error = %v", err)
 	}
-	if filters.Scope != models.TableScopeCustom {
-		t.Errorf("parseTableFilters() = %v, want %v", filters.Scope, models.TableScopeCustom)
+	if filters.Scope != models.EntityScopeCustom {
+		t.Errorf("parseTableFilters() = %v, want %v", filters.Scope, models.EntityScopeCustom)
 	}
-	if filters.Management != models.TableManagementAll {
-		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.TableManagementAll)
+	if filters.Management != models.EntityManagementAll {
+		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.EntityManagementAll)
 	}
 }
 
@@ -37,8 +37,8 @@ func TestParseTableFiltersUnmanaged(t *testing.T) {
 	if err != nil {
 		t.Errorf("parseTableFilters() error = %v", err)
 	}
-	if filters.Management != models.TableManagementUnmanaged {
-		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.TableManagementUnmanaged)
+	if filters.Management != models.EntityManagementUnmanaged {
+		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.EntityManagementUnmanaged)
 	}
 }
 
@@ -47,11 +47,11 @@ func TestParseTableFiltersSystemManaged(t *testing.T) {
 	if err != nil {
 		t.Errorf("parseTableFilters() error = %v", err)
 	}
-	if filters.Scope != models.TableScopeSystem {
-		t.Errorf("parseTableFilters() = %v, want %v", filters.Scope, models.TableScopeSystem)
+	if filters.Scope != models.EntityScopeSystem {
+		t.Errorf("parseTableFilters() = %v, want %v", filters.Scope, models.EntityScopeSystem)
 	}
-	if filters.Management != models.TableManagementManaged {
-		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.TableManagementManaged)
+	if filters.Management != models.EntityManagementManaged {
+		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.EntityManagementManaged)
 	}
 }
 
@@ -60,10 +60,10 @@ func TestParseTableFiltersUnmanagedCustom(t *testing.T) {
 	if err != nil {
 		t.Errorf("parseTableFilters() error = %v", err)
 	}
-	if filters.Scope != models.TableScopeCustom {
-		t.Errorf("parseTableFilters() = %v, want %v", filters.Scope, models.TableScopeCustom)
+	if filters.Scope != models.EntityScopeCustom {
+		t.Errorf("parseTableFilters() = %v, want %v", filters.Scope, models.EntityScopeCustom)
 	}
-	if filters.Management != models.TableManagementUnmanaged {
-		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.TableManagementUnmanaged)
+	if filters.Management != models.EntityManagementUnmanaged {
+		t.Errorf("parseTableFilters() = %v, want %v", filters.Management, models.EntityManagementUnmanaged)
 	}
 }

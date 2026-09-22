@@ -10,7 +10,7 @@ import (
 	"dvc/models"
 )
 
-func (client *DataverseClient) ListTables(scope models.TableScope, management models.TableManagement) ([]models.Entity, error) {
+func (client *DataverseClient) ListEntities(scope models.EntityScope, management models.EntityManagement) ([]models.Entity, error) {
 	requestURL := buildEntityListURL(client.endpoint(), scope, management, false, nil)
 
 	body, err := client.get(requestURL.String(), nil)
@@ -28,9 +28,9 @@ func (client *DataverseClient) ListTables(scope models.TableScope, management mo
 	return response.Value, nil
 }
 
-func (client *DataverseClient) GetTable(logicalName string, includeAttributes bool) (*models.Entity, error) {
+func (client *DataverseClient) GetEntity(logicalName string, includeAttributes bool) (*models.Entity, error) {
 	logicalNameFilter := fmt.Sprintf("LogicalName eq %s", odataStringLiteral(logicalName))
-	requestURL := buildEntityListURL(client.endpoint(), models.TableScopeAll, models.TableManagementAll, includeAttributes, []string{logicalNameFilter})
+	requestURL := buildEntityListURL(client.endpoint(), models.EntityScopeAll, models.EntityManagementAll, includeAttributes, []string{logicalNameFilter})
 
 	body, err := client.get(requestURL.String(), nil)
 	if err != nil {
@@ -84,7 +84,7 @@ func (client *DataverseClient) entityAttributesURL(logicalName string) *url.URL 
 	return &endpoint
 }
 
-func buildEntityListURL(baseURL *url.URL, scope models.TableScope, management models.TableManagement, includeAttributes bool, customFilters []string) *url.URL {
+func buildEntityListURL(baseURL *url.URL, scope models.EntityScope, management models.EntityManagement, includeAttributes bool, customFilters []string) *url.URL {
 	query := baseURL.Query()
 	query.Set("$select", constants.DefaultEntityAttributes)
 
@@ -95,16 +95,16 @@ func buildEntityListURL(baseURL *url.URL, scope models.TableScope, management mo
 	filters := append([]string{}, customFilters...)
 
 	switch scope {
-	case models.TableScopeSystem:
+	case models.EntityScopeSystem:
 		filters = append(filters, "IsCustomEntity eq false")
-	case models.TableScopeCustom:
+	case models.EntityScopeCustom:
 		filters = append(filters, "IsCustomEntity eq true")
 	}
 
 	switch management {
-	case models.TableManagementManaged:
+	case models.EntityManagementManaged:
 		filters = append(filters, "IsManaged eq true")
-	case models.TableManagementUnmanaged:
+	case models.EntityManagementUnmanaged:
 		filters = append(filters, "IsManaged eq false")
 	}
 

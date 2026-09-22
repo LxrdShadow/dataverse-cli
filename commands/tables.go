@@ -11,8 +11,8 @@ import (
 )
 
 type TableFilters struct {
-	Scope      models.TableScope
-	Management models.TableManagement
+	Scope      models.EntityScope
+	Management models.EntityManagement
 }
 
 var TablesCommand = &Command{
@@ -30,7 +30,7 @@ func tables(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
-	entities, err := client.ListTables(filters.Scope, filters.Management)
+	entities, err := client.ListEntities(filters.Scope, filters.Management)
 	if err != nil {
 		return fmt.Errorf("failed to fetch table list: %w", err)
 	}
@@ -78,16 +78,16 @@ func parseTableFilters(args []string) (TableFilters, error) {
 		return TableFilters{}, fmt.Errorf("management cannot be both managed and unmanaged")
 	}
 
-	filters := TableFilters{Scope: models.TableScopeAll, Management: models.TableManagementAll}
+	filters := TableFilters{Scope: models.EntityScopeAll, Management: models.EntityManagementAll}
 	if custom {
-		filters.Scope = models.TableScopeCustom
+		filters.Scope = models.EntityScopeCustom
 	} else if system {
-		filters.Scope = models.TableScopeSystem
+		filters.Scope = models.EntityScopeSystem
 	}
 	if managed {
-		filters.Management = models.TableManagementManaged
+		filters.Management = models.EntityManagementManaged
 	} else if unmanaged {
-		filters.Management = models.TableManagementUnmanaged
+		filters.Management = models.EntityManagementUnmanaged
 	}
 
 	return filters, nil

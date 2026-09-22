@@ -35,7 +35,7 @@ func getRecord(client *client.DataverseClient, args []string) error {
 		return fmt.Errorf("invalid options: %w", err)
 	}
 
-	entity, err := client.GetTable(logicalName, true)
+	entity, err := client.GetEntity(logicalName, true)
 	if err != nil {
 		return err
 	}
