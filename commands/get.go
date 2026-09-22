@@ -13,10 +13,10 @@ import (
 var GetCommand = &Command{
 	Name:        "get",
 	Description: "Get a record by ID",
-	Run:         getRecord,
+	Run:         runGetCommand,
 }
 
-func getRecord(client *client.DataverseClient, args []string) error {
+func runGetCommand(client *client.DataverseClient, args []string) error {
 	if len(args) < 2 || args[0] == "-h" || args[0] == "--help" {
 		fmt.Println(getUsage())
 		return nil
@@ -30,7 +30,7 @@ func getRecord(client *client.DataverseClient, args []string) error {
 		return fmt.Errorf("invalid record ID: %w", err)
 	}
 
-	options, err := parseGetOptions(args[2:])
+	options, err := parseGetRecordOptions(args[2:])
 	if err != nil {
 		return fmt.Errorf("invalid options: %w", err)
 	}

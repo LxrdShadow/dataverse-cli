@@ -13,10 +13,10 @@ import (
 var ListCommand = &Command{
 	Name:        "list",
 	Description: "Retrieve records from a Dataverse table",
-	Run:         listRecords,
+	Run:         runListCommand,
 }
 
-func listRecords(client *client.DataverseClient, args []string) error {
+func runListCommand(client *client.DataverseClient, args []string) error {
 	if len(args) == 0 || args[0] == "-h" || args[0] == "--help" {
 		fmt.Println(listUsage())
 		return nil
@@ -24,7 +24,7 @@ func listRecords(client *client.DataverseClient, args []string) error {
 
 	logicalName := args[0]
 	optionArgs := args[1:]
-	listOptions, err := parseListOptions(optionArgs)
+	listOptions, err := parseListRecordsOptions(optionArgs)
 	if err != nil {
 		return err
 	}

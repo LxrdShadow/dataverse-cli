@@ -18,10 +18,10 @@ type TableFilters struct {
 var TablesCommand = &Command{
 	Name:        "tables",
 	Description: "Retrieves a list of the tables in the current Dataverse environment.",
-	Run:         tables,
+	Run:         runTablesCommand,
 }
 
-func tables(client *client.DataverseClient, args []string) error {
+func runTablesCommand(client *client.DataverseClient, args []string) error {
 	filters, err := parseTableFilters(args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {

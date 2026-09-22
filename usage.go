@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-func Usage() {
+func PrintUsage() {
 	fmt.Print("Usage: dvc <command> [args]\n\n")
 
 	fmt.Println("Available commands:")

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func parseListOptions(args []string) (models.ListRecordsOptions, error) {
+func parseListRecordsOptions(args []string) (models.ListRecordsOptions, error) {
 	fs := flag.NewFlagSet("list", flag.ContinueOnError)
 	var options models.RecordQueryOptions
 	var rawFormat string

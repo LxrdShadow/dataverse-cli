@@ -13,7 +13,7 @@ type Config struct {
 	Timeout time.Duration
 }
 
-func Load() (Config, error) {
+func LoadConfig() (Config, error) {
 	// Get the base URL and token from environment variables
 	baseURL := os.Getenv("DVC_URL")
 	token := os.Getenv("DVC_TOKEN")

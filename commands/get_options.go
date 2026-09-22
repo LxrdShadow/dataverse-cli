@@ -8,7 +8,7 @@ import (
 	"dvc/models"
 )
 
-func parseGetOptions(args []string) (models.GetRecordOptions, error) {
+func parseGetRecordOptions(args []string) (models.GetRecordOptions, error) {
 	fs := flag.NewFlagSet("get", flag.ContinueOnError)
 	var options models.GetRecordOptions
 	var rawFormat string

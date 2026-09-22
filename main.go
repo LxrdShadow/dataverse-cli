@@ -13,11 +13,11 @@ import (
 )
 
 func main() {
-	flag.Usage = Usage
+	flag.Usage = PrintUsage
 	flag.Parse()
 	args := os.Args[1:]
 	if len(args) == 0 {
-		Usage()
+		PrintUsage()
 		return
 	}
 
@@ -27,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	config, err := config.Load()
+	config, err := config.LoadConfig()
 	if err != nil {
 		fmt.Println("Error loading config:", err)
 		os.Exit(1)
