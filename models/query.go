@@ -1,6 +1,6 @@
 package models
 
-type QueryOptions struct {
+type RecordQueryOptions struct {
 	Select      string
 	Filter      string
 	OrderBy     string
@@ -9,12 +9,12 @@ type QueryOptions struct {
 	Top         int
 }
 
-type ListOptions struct {
+type ListRecordsOptions struct {
 	Output OutputFormat
-	Query  QueryOptions
+	Query  RecordQueryOptions
 }
 
-type GetOptions struct {
+type GetRecordOptions struct {
 	Select string
 	Output OutputFormat
 }

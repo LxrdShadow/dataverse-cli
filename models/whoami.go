@@ -1,7 +1,7 @@
 package models
 
 type WhoAmIResponse struct {
-	BusinessUnitId string `json:"businessUnitId"`
-	UserId         string `json:"userId"`
-	OrganizationId string `json:"organizationId"`
+	BusinessUnitID string `json:"businessUnitId"`
+	UserID         string `json:"userId"`
+	OrganizationID string `json:"organizationId"`
 }

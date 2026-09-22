@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-func parseListOptions(args []string) (models.ListOptions, error) {
+func parseListOptions(args []string) (models.ListRecordsOptions, error) {
 	fs := flag.NewFlagSet("list", flag.ContinueOnError)
-	var options models.QueryOptions
+	var options models.RecordQueryOptions
 	var rawFormat string
 
 	fs.StringVar(&options.Select, "select", "", "Select columns to retrieve and display")
@@ -23,15 +23,15 @@ func parseListOptions(args []string) (models.ListOptions, error) {
 	fs.Usage = func() { fmt.Println(listUsage()) }
 
 	if err := fs.Parse(args); err != nil {
-		return models.ListOptions{}, err
+		return models.ListRecordsOptions{}, err
 	}
 
 	if options.Top < 0 {
-		return models.ListOptions{}, fmt.Errorf("top must be a greater than 0")
+		return models.ListRecordsOptions{}, fmt.Errorf("top must be a greater than 0")
 	}
 
 	if options.MaxPageSize < 0 {
-		return models.ListOptions{}, fmt.Errorf("max-page-size must be a greater than 0")
+		return models.ListRecordsOptions{}, fmt.Errorf("max-page-size must be a greater than 0")
 	}
 
 	var format models.OutputFormat
@@ -41,8 +41,8 @@ func parseListOptions(args []string) (models.ListOptions, error) {
 	case string(models.OutputFormatTable):
 		format = models.OutputFormatTable
 	default:
-		return models.ListOptions{}, fmt.Errorf("invalid output format %q (allowed: json, table)", rawFormat)
+		return models.ListRecordsOptions{}, fmt.Errorf("invalid output format %q (allowed: json, table)", rawFormat)
 	}
 
-	return models.ListOptions{Query: options, Output: format}, nil
+	return models.ListRecordsOptions{Query: options, Output: format}, nil
 }

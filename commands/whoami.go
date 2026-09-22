@@ -17,8 +17,8 @@ func whoAmI(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
-	fmt.Println("BusinessUnitId:", whoamiResponse.BusinessUnitId)
-	fmt.Println("UserId:", whoamiResponse.UserId)
-	fmt.Println("OrganizationId:", whoamiResponse.OrganizationId)
+	fmt.Println("BusinessUnitID:", whoamiResponse.BusinessUnitID)
+	fmt.Println("UserID:", whoamiResponse.UserID)
+	fmt.Println("OrganizationID:", whoamiResponse.OrganizationID)
 	return nil
 }

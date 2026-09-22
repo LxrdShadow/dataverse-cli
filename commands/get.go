@@ -42,12 +42,7 @@ func getRecord(client *client.DataverseClient, args []string) error {
 
 	record, err := client.GetRecord(entity.EntitySetName, recordID, options)
 	if err != nil {
-		return fmt.Errorf("failed to list records: %w", err)
-	}
-
-	if record == nil {
-		fmt.Println("record not found")
-		return nil
+		return fmt.Errorf("failed to get record: %w", err)
 	}
 
 	switch options.Output {

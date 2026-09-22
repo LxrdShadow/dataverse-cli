@@ -8,7 +8,7 @@ import (
 	"dvc/models"
 )
 
-func (client *DataverseClient) ListRecords(entitySetName string, options models.ListOptions) ([]models.Record, error) {
+func (client *DataverseClient) ListRecords(entitySetName string, options models.ListRecordsOptions) ([]models.Record, error) {
 	requestURL := client.endpoint(entitySetName)
 	query := getQueryString(options.Query)
 	if len(query) > 0 {
@@ -55,7 +55,7 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 	return records, nil
 }
 
-func (client *DataverseClient) GetRecord(entitySetName string, recordID string, options models.GetOptions) (models.Record, error) {
+func (client *DataverseClient) GetRecord(entitySetName string, recordID string, options models.GetRecordOptions) (models.Record, error) {
 	requestURL := client.endpoint(entitySetName + "(" + recordID + ")")
 	if options.Select != "" {
 		query := requestURL.Query()
@@ -75,7 +75,7 @@ func (client *DataverseClient) GetRecord(entitySetName string, recordID string, 
 	return record, nil
 }
 
-func getQueryString(options models.QueryOptions) url.Values {
+func getQueryString(options models.RecordQueryOptions) url.Values {
 	query := url.Values{}
 	if len(options.Select) > 0 {
 		query.Set("$select", options.Select)
