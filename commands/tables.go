@@ -43,7 +43,7 @@ func runTablesCommand(client *client.DataverseClient, args []string) error {
 		rows = append(rows, table.Row{
 			entity.LogicalName,
 			entity.DisplayName,
-			entity.IsCustom,
+			entity.IsCustomEntity,
 			entity.IsManaged,
 		})
 	}
