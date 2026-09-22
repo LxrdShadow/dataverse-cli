@@ -4,6 +4,7 @@ import (
 	"dvc/client"
 	"dvc/models"
 	"dvc/utils"
+	"flag"
 	"fmt"
 	"strings"
 
@@ -19,7 +20,7 @@ var ListCommand = &Command{
 func runListCommand(client *client.DataverseClient, args []string) error {
 	if len(args) == 0 || args[0] == "-h" || args[0] == "--help" {
 		fmt.Println(listUsage())
-		return nil
+		return flag.ErrHelp
 	}
 
 	logicalName := args[0]

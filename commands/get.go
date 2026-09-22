@@ -4,6 +4,7 @@ import (
 	"dvc/client"
 	"dvc/models"
 	"dvc/utils"
+	"flag"
 	"fmt"
 	"uuid"
 
@@ -19,7 +20,7 @@ var GetCommand = &Command{
 func runGetCommand(client *client.DataverseClient, args []string) error {
 	if len(args) < 2 || args[0] == "-h" || args[0] == "--help" {
 		fmt.Println(getUsage())
-		return nil
+		return flag.ErrHelp
 	}
 
 	logicalName := args[0]

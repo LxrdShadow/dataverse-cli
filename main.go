@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -18,7 +19,7 @@ func main() {
 	args := os.Args[1:]
 	if len(args) == 0 {
 		PrintUsage()
-		return
+		os.Exit(1)
 	}
 
 	// Load environment variables from .env file
@@ -51,7 +52,9 @@ func main() {
 	cmd := availableCommands[command]
 	err = cmd.Run(client, args[1:])
 	if err != nil {
-		fmt.Println("Error:", err)
+		if !errors.Is(err, flag.ErrHelp) {
+			fmt.Println("Error:", err)
+		}
 		os.Exit(1)
 	}
 }

@@ -3,7 +3,6 @@ package commands
 import (
 	"dvc/client"
 	"dvc/models"
-	"errors"
 	"flag"
 	"fmt"
 
@@ -24,9 +23,6 @@ var TablesCommand = &Command{
 func runTablesCommand(client *client.DataverseClient, args []string) error {
 	filters, err := parseTableFilters(args)
 	if err != nil {
-		if errors.Is(err, flag.ErrHelp) {
-			return nil
-		}
 		return err
 	}
 
