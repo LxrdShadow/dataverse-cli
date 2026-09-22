@@ -3,6 +3,7 @@ package commands
 import (
 	"dvc/client"
 	"dvc/models"
+	"dvc/utils"
 	"fmt"
 	"strings"
 
@@ -85,7 +86,7 @@ func renderTable(
 		row := table.Row{}
 
 		for _, field := range fields {
-			value := record[field.RecordName]
+			value := utils.ValueOrEmpty(record, field.RecordName)
 			row = append(row, value)
 		}
 

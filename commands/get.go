@@ -3,8 +3,8 @@ package commands
 import (
 	"dvc/client"
 	"dvc/models"
+	"dvc/utils"
 	"fmt"
-	"strings"
 	"uuid"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -35,20 +35,9 @@ func getRecord(client *client.DataverseClient, args []string) error {
 		return fmt.Errorf("invalid options: %w", err)
 	}
 
-	entity, err := client.GetTable(logicalName, false)
+	entity, err := client.GetTable(logicalName, true)
 	if err != nil {
 		return err
-	}
-
-	if options.Select == "" && options.Output == models.OutputFormatTable {
-		defaultFields := getDefaultTableFields(entity.Attributes)
-
-		queryFields := make([]string, 0, len(defaultFields))
-		for _, field := range defaultFields {
-			queryFields = append(queryFields, field.QueryName)
-		}
-
-		options.Select = strings.Join(queryFields, ",")
 	}
 
 	record, err := client.GetRecord(entity.EntitySetName, recordID, options)
@@ -65,7 +54,7 @@ func getRecord(client *client.DataverseClient, args []string) error {
 	case models.OutputFormatJSON:
 		return renderJSON(record)
 	case models.OutputFormatTable:
-		err := renderFieldValueTable(record)
+		err := renderFieldValueTable(entity.Attributes, options.Select, record)
 		if err != nil {
 			return fmt.Errorf("failed to render table: %w", err)
 		}
@@ -76,12 +65,14 @@ func getRecord(client *client.DataverseClient, args []string) error {
 	return nil
 }
 
-func renderFieldValueTable(record models.Record) error {
-	headerRow := table.Row{"Field", "Value"}
-
+func renderFieldValueTable(attributes []models.EntityAttribute, selectedFields string, record models.Record) error {
+	headerRow := table.Row{}
 	rows := make([]table.Row, 0, len(record))
-	for key, value := range record {
-		row := table.Row{key, value}
+
+	fields := getSelectFields(attributes, selectedFields)
+	headerRow = table.Row{"Field", "Display Name", "Value"}
+	for _, field := range fields {
+		row := table.Row{field.QueryName, field.DisplayName, utils.ValueOrEmpty(record, field.RecordName)}
 		rows = append(rows, row)
 	}
 
