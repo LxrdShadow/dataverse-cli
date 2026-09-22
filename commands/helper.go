@@ -1,26 +1,21 @@
 package commands
 
 import (
+	"dvc/errors"
 	"flag"
 	"fmt"
 	"slices"
 )
 
-func checkArgs(args []string, usage string) error {
-	return checkArgsWithMinLength(args, 1, usage)
-}
-
-func checkArgsWithMinLength(args []string, minLen int, usage string) error {
-	containsHelpFlag := func(arg string) bool {
-		return arg == "-h" || arg == "--help"
-	}
-
-	if slices.ContainsFunc(args, containsHelpFlag) {
-		fmt.Println(usage)
-		return nil
-	} else if len(args) < minLen {
+func validateArgs(args []string, minimum int, usage string) error {
+	if slices.Contains(args, "-h") || slices.Contains(args, "--help") {
 		fmt.Println(usage)
 		return flag.ErrHelp
+	}
+
+	if len(args) < minimum {
+		fmt.Println(usage)
+		return errors.ErrUsage
 	}
 
 	return nil

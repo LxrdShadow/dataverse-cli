@@ -16,7 +16,7 @@ var ListCommand = &Command{
 }
 
 func runListCommand(client *client.DataverseClient, args []string) error {
-	err := checkArgs(args, listUsage())
+	err := validateArgs(args, 1, listUsage())
 	if err != nil {
 		return err
 	}

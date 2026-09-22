@@ -52,9 +52,10 @@ func main() {
 	cmd := availableCommands[command]
 	err = cmd.Run(client, args[1:])
 	if err != nil {
-		if !errors.Is(err, flag.ErrHelp) {
-			fmt.Println("Error:", err)
+		if errors.Is(err, flag.ErrHelp) {
+			return
 		}
+		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
 }

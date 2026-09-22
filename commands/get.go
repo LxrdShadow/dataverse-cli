@@ -16,7 +16,7 @@ var GetCommand = &Command{
 }
 
 func runGetCommand(client *client.DataverseClient, args []string) error {
-	err := checkArgsWithMinLength(args, 2, getUsage())
+	err := validateArgs(args, 2, getUsage())
 	if err != nil {
 		return err
 	}

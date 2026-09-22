@@ -1,5 +1,7 @@
 package errors
 
+import "errors"
+
 type ErrorResponse struct {
 	ErrorValue APIError `json:"error"`
 }
@@ -14,3 +16,4 @@ func (e APIError) Error() string {
 }
 
 var ErrUnauthorized = APIError{Code: "Unauthorized", Message: "unauthorized"}
+var ErrUsage = errors.New("invalid command usage")
