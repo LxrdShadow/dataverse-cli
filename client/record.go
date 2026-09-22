@@ -55,6 +55,21 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 	return records, nil
 }
 
+func (client *DataverseClient) GetRecord(entitySetName string, recordID string) (models.Record, error) {
+	requestURL := client.endpoint(entitySetName + "(" + recordID + ")")
+
+	body, err := client.get(requestURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var record models.Record
+	if err := json.Unmarshal(body, &record); err != nil {
+		return nil, err
+	}
+	return record, nil
+}
+
 func getQueryString(options models.QueryOptions) url.Values {
 	query := url.Values{}
 	if len(options.Select) > 0 {
