@@ -33,23 +33,23 @@ func NewDataverseClient(baseURL string, token string, timeout time.Duration) (*D
 	}, nil
 }
 
-func (client *DataverseClient) endpoint(parts ...string) *url.URL {
-	endpoint := *client.apiURL
+func (c *DataverseClient) endpoint(parts ...string) *url.URL {
+	endpoint := *c.apiURL
 	endpoint.Path = path.Join(endpoint.Path, path.Join(parts...))
 	return &endpoint
 }
 
-func (client *DataverseClient) get(url string, headers map[string]string) ([]byte, error) {
-	return client.request(http.MethodGet, url, headers)
+func (c *DataverseClient) getURL(rawURL string, headers map[string]string) ([]byte, error) {
+	return c.doRequest(http.MethodGet, rawURL, headers)
 }
 
-func (client *DataverseClient) request(method string, url string, headers map[string]string) ([]byte, error) {
-	request, err := http.NewRequest(method, url, nil)
+func (c *DataverseClient) doRequest(method string, rawURL string, headers map[string]string) ([]byte, error) {
+	request, err := http.NewRequest(method, rawURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build request: %w", err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+client.Token)
+	request.Header.Set("Authorization", "Bearer "+c.Token)
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("OData-Version", "4.0")
@@ -60,7 +60,7 @@ func (client *DataverseClient) request(method string, url string, headers map[st
 		request.Header.Set(key, value)
 	}
 
-	response, err := client.HTTP.Do(request)
+	response, err := c.HTTP.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}

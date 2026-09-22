@@ -10,10 +10,10 @@ import (
 	"dvc/models"
 )
 
-func (client *DataverseClient) ListEntities(scope models.EntityScope, management models.EntityManagement) ([]models.Entity, error) {
-	requestURL := buildEntityListURL(client.endpoint(), scope, management, false, nil)
+func (c *DataverseClient) ListEntities(scope models.EntityScope, management models.EntityManagement) ([]models.Entity, error) {
+	requestURL := buildEntityListURL(c.endpoint(), scope, management, false, nil)
 
-	body, err := client.get(requestURL.String(), nil)
+	body, err := c.getURL(requestURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -28,11 +28,11 @@ func (client *DataverseClient) ListEntities(scope models.EntityScope, management
 	return response.Value, nil
 }
 
-func (client *DataverseClient) GetEntity(logicalName string, includeAttributes bool) (*models.Entity, error) {
+func (c *DataverseClient) GetEntity(logicalName string, includeAttributes bool) (*models.Entity, error) {
 	logicalNameFilter := fmt.Sprintf("LogicalName eq %s", odataStringLiteral(logicalName))
-	requestURL := buildEntityListURL(client.endpoint(), models.EntityScopeAll, models.EntityManagementAll, includeAttributes, []string{logicalNameFilter})
+	requestURL := buildEntityListURL(c.endpoint(), models.EntityScopeAll, models.EntityManagementAll, includeAttributes, []string{logicalNameFilter})
 
-	body, err := client.get(requestURL.String(), nil)
+	body, err := c.getURL(requestURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -51,13 +51,13 @@ func (client *DataverseClient) GetEntity(logicalName string, includeAttributes b
 	return &response.Value[0], nil
 }
 
-func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]models.EntityAttribute, error) {
-	requestURL := client.entityAttributesURL(logicalName)
+func (c *DataverseClient) ListEntityAttributes(logicalName string) ([]models.EntityAttribute, error) {
+	requestURL := c.entityAttributesURL(logicalName)
 	query := requestURL.Query()
 	query.Set("$select", constants.DefaultAttributesInfo)
 	requestURL.RawQuery = query.Encode()
 
-	body, err := client.get(requestURL.String(), nil)
+	body, err := c.getURL(requestURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ func (client *DataverseClient) ListEntityAttributes(logicalName string) ([]model
 	return response.Value, nil
 }
 
-func (client *DataverseClient) entityAttributesURL(logicalName string) *url.URL {
-	endpoint := *client.apiURL
+func (c *DataverseClient) entityAttributesURL(logicalName string) *url.URL {
+	endpoint := *c.apiURL
 	endpoint.Path = strings.TrimRight(endpoint.Path, "/") +
 		"/" + entityDefinitionPath(logicalName)
 

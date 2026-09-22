@@ -6,10 +6,10 @@ import (
 	"fmt"
 )
 
-func (client *DataverseClient) WhoAmI() (models.WhoAmIResponse, error) {
-	url := client.endpoint("WhoAmI")
+func (c *DataverseClient) WhoAmI() (models.WhoAmIResponse, error) {
+	url := c.endpoint("WhoAmI")
 
-	body, err := client.get(url.String(), nil)
+	body, err := c.getURL(url.String(), nil)
 	if err != nil {
 		return models.WhoAmIResponse{}, err
 	}

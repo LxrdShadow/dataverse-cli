@@ -8,8 +8,8 @@ import (
 	"dvc/models"
 )
 
-func (client *DataverseClient) ListRecords(entitySetName string, options models.ListRecordsOptions) ([]models.Record, error) {
-	requestURL := client.endpoint(entitySetName)
+func (c *DataverseClient) ListRecords(entitySetName string, options models.ListRecordsOptions) ([]models.Record, error) {
+	requestURL := c.endpoint(entitySetName)
 	query := getQueryString(options.Query)
 	if len(query) > 0 {
 		requestURL.RawQuery = query.Encode()
@@ -23,7 +23,7 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 	var records []models.Record
 
 	for requestURL != nil && requestURL.String() != "" {
-		body, err := client.get(requestURL.String(), headers)
+		body, err := c.getURL(requestURL.String(), headers)
 		if err != nil {
 			return nil, err
 		}
@@ -55,15 +55,15 @@ func (client *DataverseClient) ListRecords(entitySetName string, options models.
 	return records, nil
 }
 
-func (client *DataverseClient) GetRecord(entitySetName string, recordID string, options models.GetRecordOptions) (models.Record, error) {
-	requestURL := client.endpoint(entitySetName + "(" + recordID + ")")
+func (c *DataverseClient) GetRecord(entitySetName string, recordID string, options models.GetRecordOptions) (models.Record, error) {
+	requestURL := c.endpoint(entitySetName + "(" + recordID + ")")
 	if options.Select != "" {
 		query := requestURL.Query()
 		query.Set("$select", options.Select)
 		requestURL.RawQuery = query.Encode()
 	}
 
-	body, err := client.get(requestURL.String(), nil)
+	body, err := c.getURL(requestURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
