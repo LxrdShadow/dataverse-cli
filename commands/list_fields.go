@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-type TableField struct {
+type DisplayField struct {
 	DisplayName string
 	QueryName   string
 	RecordName  string
 }
 
-func getMetadataFieldName(fieldName string) string {
+func logicalNameFromQueryName(fieldName string) string {
 	switch {
 	case strings.HasPrefix(fieldName, "_") &&
 		strings.HasSuffix(fieldName, "_value"):
@@ -25,7 +25,7 @@ func getMetadataFieldName(fieldName string) string {
 	}
 }
 
-func getQueryFieldName(attr models.EntityAttribute) string {
+func queryNameForAttribute(attr models.EntityAttribute) string {
 	switch attr.AttributeType {
 	case models.AttributeTypeOwner:
 		return "_" + attr.LogicalName + "_value"
@@ -35,8 +35,8 @@ func getQueryFieldName(attr models.EntityAttribute) string {
 	}
 }
 
-func getSelectFields(attributes []models.EntityAttribute, selectedFields string) []TableField {
-	var fields []TableField
+func getSelectFields(attributes []models.EntityAttribute, selectedFields string) []DisplayField {
+	var fields []DisplayField
 
 	availableAttributes := make(map[string]models.EntityAttribute)
 	for _, attr := range attributes {
@@ -50,22 +50,22 @@ func getSelectFields(attributes []models.EntityAttribute, selectedFields string)
 			continue
 		}
 
-		metadataName := getMetadataFieldName(fieldName)
+		metadataName := logicalNameFromQueryName(fieldName)
 		attr, found := availableAttributes[metadataName]
 		if !found {
 			continue
 		}
 
-		fields = append(fields, TableField{
+		fields = append(fields, DisplayField{
 			DisplayName: attr.DisplayName,
-			QueryName:   getQueryFieldName(attr),
-			RecordName:  getRecordFieldName(attr),
+			QueryName:   queryNameForAttribute(attr),
+			RecordName:  recordValueNameForAttribute(attr),
 		})
 	}
 	return fields
 }
 
-func getRecordFieldName(attr models.EntityAttribute) string {
+func recordValueNameForAttribute(attr models.EntityAttribute) string {
 	const formattedSuffix = "@OData.Community.Display.V1.FormattedValue"
 
 	switch attr.AttributeType {
@@ -82,46 +82,46 @@ func getRecordFieldName(attr models.EntityAttribute) string {
 	}
 }
 
-func getDefaultTableFields(
+func defaultDisplayFields(
 	attributes []models.EntityAttribute,
-) []TableField {
-	var fields []TableField
+) []DisplayField {
+	var fields []DisplayField
 
 	for _, attr := range attributes {
 		switch {
 		case attr.IsPrimaryId && !attr.IsLogical:
-			fields = append(fields, TableField{
+			fields = append(fields, DisplayField{
 				DisplayName: "ID",
 				QueryName:   attr.LogicalName,
 				RecordName:  attr.LogicalName,
 			})
 
 		case attr.IsPrimaryName:
-			fields = append(fields, TableField{
+			fields = append(fields, DisplayField{
 				DisplayName: attr.DisplayName,
 				QueryName:   attr.LogicalName,
 				RecordName:  attr.LogicalName,
 			})
 
 		case attr.LogicalName == "createdon":
-			fields = append(fields, TableField{
+			fields = append(fields, DisplayField{
 				DisplayName: "Created On",
 				QueryName:   attr.LogicalName,
-				RecordName:  getRecordFieldName(attr),
+				RecordName:  recordValueNameForAttribute(attr),
 			})
 
 		case attr.LogicalName == "statecode":
-			fields = append(fields, TableField{
+			fields = append(fields, DisplayField{
 				DisplayName: "State",
 				QueryName:   attr.LogicalName,
-				RecordName:  getRecordFieldName(attr),
+				RecordName:  recordValueNameForAttribute(attr),
 			})
 
 		case attr.LogicalName == "ownerid":
-			fields = append(fields, TableField{
+			fields = append(fields, DisplayField{
 				DisplayName: "Owner",
-				QueryName:   getQueryFieldName(attr),
-				RecordName:  getRecordFieldName(attr),
+				QueryName:   queryNameForAttribute(attr),
+				RecordName:  recordValueNameForAttribute(attr),
 			})
 		}
 	}

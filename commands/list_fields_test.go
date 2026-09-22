@@ -21,7 +21,7 @@ func TestGetMetadataFieldName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getMetadataFieldName(tt.field)
+			got := logicalNameFromQueryName(tt.field)
 			if got != tt.want {
 				t.Errorf("getMetadataFieldName(%q) = %q, want %q", tt.field, got, tt.want)
 			}
@@ -49,7 +49,7 @@ func TestGetQueryFieldName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getQueryFieldName(tt.attr)
+			got := queryNameForAttribute(tt.attr)
 			if got != tt.want {
 				t.Errorf("getQueryFieldName(%+v) = %q, want %q", tt.attr, got, tt.want)
 			}
@@ -94,7 +94,7 @@ func TestGetRecordFieldName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getRecordFieldName(tt.attr)
+			got := recordValueNameForAttribute(tt.attr)
 			if got != tt.want {
 				t.Errorf("getRecordFieldName(%+v) = %q, want %q", tt.attr, got, tt.want)
 			}
@@ -111,19 +111,19 @@ func TestGetSelectFields(t *testing.T) {
 	tests := []struct {
 		name           string
 		selectedFields string
-		want           []TableField
+		want           []DisplayField
 	}{
 		{
 			name:           "plain field",
 			selectedFields: "name",
-			want: []TableField{
+			want: []DisplayField{
 				{DisplayName: "Name", QueryName: "name", RecordName: "name"},
 			},
 		},
 		{
 			name:           "owner field given as lookup value",
 			selectedFields: "_ownerid_value",
-			want: []TableField{
+			want: []DisplayField{
 				{
 					DisplayName: "Owner",
 					QueryName:   "_ownerid_value",
@@ -134,14 +134,14 @@ func TestGetSelectFields(t *testing.T) {
 		{
 			name:           "unknown field is skipped",
 			selectedFields: "name,doesnotexist",
-			want: []TableField{
+			want: []DisplayField{
 				{DisplayName: "Name", QueryName: "name", RecordName: "name"},
 			},
 		},
 		{
 			name:           "blank entries are skipped",
 			selectedFields: "name, ,",
-			want: []TableField{
+			want: []DisplayField{
 				{DisplayName: "Name", QueryName: "name", RecordName: "name"},
 			},
 		},
@@ -173,7 +173,7 @@ func TestGetDefaultTableFields(t *testing.T) {
 		{LogicalName: "somethingelse"},
 	}
 
-	want := []TableField{
+	want := []DisplayField{
 		{DisplayName: "ID", QueryName: "id", RecordName: "id"},
 		{DisplayName: "Name", QueryName: "name", RecordName: "name"},
 		{
@@ -193,7 +193,7 @@ func TestGetDefaultTableFields(t *testing.T) {
 		},
 	}
 
-	got := getDefaultTableFields(attributes)
+	got := defaultDisplayFields(attributes)
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("getDefaultTableFields() = %+v, want %+v", got, want)
 	}

@@ -67,10 +67,10 @@ func renderFieldValueTable(attributes []models.EntityAttribute, selectedFields s
 	fields := getSelectFields(attributes, selectedFields)
 	if len(fields) == 0 && selectedFields == "" {
 		for _, attr := range attributes {
-			fields = append(fields, TableField{
+			fields = append(fields, DisplayField{
 				DisplayName: attr.DisplayName,
-				QueryName:   getQueryFieldName(attr),
-				RecordName:  getRecordFieldName(attr),
+				QueryName:   queryNameForAttribute(attr),
+				RecordName:  recordValueNameForAttribute(attr),
 			})
 		}
 	} else if len(fields) == 0 {
