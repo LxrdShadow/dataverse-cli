@@ -13,3 +13,8 @@ type ListOptions struct {
 	Output OutputFormat
 	Query  QueryOptions
 }
+
+type GetOptions struct {
+	Select string
+	Output OutputFormat
+}

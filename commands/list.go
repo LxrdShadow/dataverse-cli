@@ -23,7 +23,7 @@ func listRecords(client *client.DataverseClient, args []string) error {
 
 	logicalName := args[0]
 	optionArgs := args[1:]
-	listOptions, err := parseOptions(optionArgs)
+	listOptions, err := parseListOptions(optionArgs)
 	if err != nil {
 		return err
 	}
@@ -47,11 +47,6 @@ func listRecords(client *client.DataverseClient, args []string) error {
 	records, err := client.ListRecords(entity.EntitySetName, listOptions)
 	if err != nil {
 		return fmt.Errorf("failed to list records: %w", err)
-	}
-
-	if len(records) == 0 {
-		fmt.Println("no records found")
-		return nil
 	}
 
 	switch listOptions.Output {
