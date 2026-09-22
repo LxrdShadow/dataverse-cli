@@ -43,17 +43,6 @@ func getSelectFields(attributes []models.EntityAttribute, selectedFields string)
 		availableAttributes[attr.LogicalName] = attr
 	}
 
-	if selectedFields == "" {
-		for _, attr := range attributes {
-			fields = append(fields, TableField{
-				DisplayName: attr.DisplayName,
-				QueryName:   getQueryFieldName(attr),
-				RecordName:  getRecordFieldName(attr),
-			})
-		}
-		return fields
-	}
-
 	selected := strings.SplitSeq(selectedFields, ",")
 	for fieldName := range selected {
 		fieldName = strings.TrimSpace(fieldName)

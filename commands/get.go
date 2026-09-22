@@ -70,6 +70,18 @@ func renderFieldValueTable(attributes []models.EntityAttribute, selectedFields s
 	rows := make([]table.Row, 0, len(record))
 
 	fields := getSelectFields(attributes, selectedFields)
+	if len(fields) == 0 && selectedFields == "" {
+		for _, attr := range attributes {
+			fields = append(fields, TableField{
+				DisplayName: attr.DisplayName,
+				QueryName:   getQueryFieldName(attr),
+				RecordName:  getRecordFieldName(attr),
+			})
+		}
+	} else if len(fields) == 0 {
+		return fmt.Errorf("none of the selected columns exist on the table")
+	}
+
 	headerRow = table.Row{"Field", "Display Name", "Value"}
 	for _, field := range fields {
 		row := table.Row{field.QueryName, field.DisplayName, utils.ValueOrEmpty(record, field.RecordName)}
