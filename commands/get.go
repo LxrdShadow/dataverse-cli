@@ -50,7 +50,7 @@ func runGetCommand(client *client.DataverseClient, args []string) error {
 	case models.OutputFormatJSON:
 		return renderJSON(record)
 	case models.OutputFormatTable:
-		err := renderFieldValueTable(entity.Attributes, options.Select, record)
+		err := renderFieldValueTable(entity.Attributes, options, record)
 		if err != nil {
 			return fmt.Errorf("failed to render table: %w", err)
 		}
@@ -61,12 +61,12 @@ func runGetCommand(client *client.DataverseClient, args []string) error {
 	return nil
 }
 
-func renderFieldValueTable(attributes []models.EntityAttribute, selectedFields string, record models.Record) error {
+func renderFieldValueTable(attributes []models.EntityAttribute, options models.GetRecordOptions, record models.Record) error {
 	headerRow := table.Row{}
 	rows := make([]table.Row, 0, len(record))
 
-	fields := getSelectFields(attributes, selectedFields)
-	if len(fields) == 0 && selectedFields == "" {
+	fields := getSelectFields(attributes, options.Select)
+	if len(fields) == 0 && options.Select == "" {
 		for _, attr := range attributes {
 			fields = append(fields, DisplayField{
 				DisplayName: attr.DisplayName,
@@ -80,6 +80,9 @@ func renderFieldValueTable(attributes []models.EntityAttribute, selectedFields s
 
 	headerRow = table.Row{"Field", "Display Name", "Value"}
 	for _, field := range fields {
+		if value := record[field.RecordName]; value == nil && !options.DisplayEmpty {
+			continue
+		}
 		row := table.Row{field.QueryName, field.DisplayName, utils.ValueOrEmpty(record, field.RecordName)}
 		rows = append(rows, row)
 	}

@@ -15,6 +15,7 @@ type ListRecordsOptions struct {
 }
 
 type GetRecordOptions struct {
-	Select string
-	Output OutputFormat
+	Select       string
+	Output       OutputFormat
+	DisplayEmpty bool
 }
