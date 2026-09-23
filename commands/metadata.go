@@ -25,26 +25,44 @@ func runMetadataCommand(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
-	entity, err := client.GetEntity(args[0], false)
-	if err != nil {
-		return err
-	}
-
-	switch options.Output {
-	case models.OutputFormatJSON:
-		return renderJSON(entity)
-	case models.OutputFormatTable:
-		if err := renderMetadataTable(entity); err != nil {
-			return fmt.Errorf("failed to render table: %w", err)
+	if options.Attributes {
+		entity, err := client.GetEntity(args[0], true)
+		if err != nil {
+			return err
 		}
-	default:
-		return fmt.Errorf("unsupported output format: %s", options.Output)
+
+		switch options.Output {
+		case models.OutputFormatJSON:
+			return renderJSON(entity.Attributes)
+		case models.OutputFormatTable:
+			if err := renderAttributesMetadataTable(entity.Attributes); err != nil {
+				return fmt.Errorf("failed to render table: %w", err)
+			}
+		default:
+			return fmt.Errorf("unsupported output format: %s", options.Output)
+		}
+	} else {
+		entity, err := client.GetEntity(args[0], false)
+		if err != nil {
+			return err
+		}
+
+		switch options.Output {
+		case models.OutputFormatJSON:
+			return renderJSON(entity)
+		case models.OutputFormatTable:
+			if err := renderEntityMetadataTable(entity); err != nil {
+				return fmt.Errorf("failed to render table: %w", err)
+			}
+		default:
+			return fmt.Errorf("unsupported output format: %s", options.Output)
+		}
 	}
 
 	return nil
 }
 
-func renderMetadataTable(entity *models.Entity) error {
+func renderEntityMetadataTable(entity *models.Entity) error {
 	headerRow := table.Row{"Entity Metadata", "Value"}
 	rows := []table.Row{
 		{"Logical Name", entity.LogicalName},
@@ -58,6 +76,36 @@ func renderMetadataTable(entity *models.Entity) error {
 
 	printTable(headerRow, rows)
 	return nil
+}
+
+func renderAttributesMetadataTable(attributes []models.EntityAttribute) error {
+	headerRow := table.Row{"Logical Name", "Display Name", "Type", "Required"}
+	rows := make([]table.Row, 0, len(attributes))
+	for _, attr := range attributes {
+		rows = append(rows, table.Row{
+			attr.LogicalName,
+			attr.DisplayName,
+			attr.AttributeType,
+			getRequiredLevel(attr.RequiredLevel),
+		})
+	}
+
+	printTable(headerRow, rows)
+	return nil
+}
+
+func getRequiredLevel(requiredLevel string) string {
+	var requiredLevelMap = map[string]string{
+		"None":                "None",
+		"SystemRequired":      "System Required",
+		"ApplicationRequired": "Application Required",
+		"Recommended":         "Recommended",
+	}
+
+	if level, ok := requiredLevelMap[requiredLevel]; ok {
+		return level
+	}
+	return requiredLevel
 }
 
 func metadataUsage() string {
