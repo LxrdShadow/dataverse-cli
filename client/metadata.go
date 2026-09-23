@@ -69,20 +69,20 @@ func (c *DataverseClient) ListEntityAttributes(logicalName string) ([]models.Ent
 	return response.Value, nil
 }
 
-func (c *DataverseClient) ListEntityRelationships(logicalName string) (*models.EntityRelationships, error) {
+func (c *DataverseClient) ListEntityRelationships(logicalName string) (models.EntityRelationships, error) {
 	requestURL := c.entityRelationshipsURL(logicalName)
 
 	body, err := c.getURL(requestURL.String(), nil)
 	if err != nil {
-		return nil, err
+		return models.EntityRelationships{}, err
 	}
 
 	var response models.EntityRelationships
 	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse entity relationships: %w", err)
+		return models.EntityRelationships{}, fmt.Errorf("failed to parse entity relationships: %w", err)
 	}
 
-	return &response, nil
+	return response, nil
 }
 
 func (c *DataverseClient) entityAttributesURL(logicalName string) *url.URL {
