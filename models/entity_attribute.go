@@ -11,12 +11,17 @@ const (
 	AttributeTypeDateTime AttributeType = "DateTime"
 )
 
+type RequiredLevel struct {
+	Value string
+}
+
 type EntityAttribute struct {
 	LogicalName   string
 	DisplayName   string
 	IsPrimaryName bool
 	IsPrimaryId   bool
 	IsLogical     bool
+	RequiredLevel string
 	AttributeType AttributeType
 }
 
@@ -27,6 +32,7 @@ func (a *EntityAttribute) UnmarshalJSON(data []byte) error {
 		IsPrimaryName bool
 		IsPrimaryId   bool
 		IsLogical     bool
+		RequiredLevel RequiredLevel
 		AttributeType AttributeType
 	}
 
@@ -39,6 +45,7 @@ func (a *EntityAttribute) UnmarshalJSON(data []byte) error {
 	a.IsPrimaryName = raw.IsPrimaryName
 	a.IsPrimaryId = raw.IsPrimaryId
 	a.IsLogical = raw.IsLogical
+	a.RequiredLevel = raw.RequiredLevel.Value
 	a.AttributeType = raw.AttributeType
 	return nil
 }
