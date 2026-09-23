@@ -8,6 +8,14 @@ type OneToManyRelationship struct {
 	ReferencingAttribute string `json:"ReferencingAttribute"`
 }
 
+type RelationshipType string
+
+const (
+	RelationshipTypeOneToMany  RelationshipType = "OneToMany"
+	RelationshipTypeManyToOne  RelationshipType = "ManyToOne"
+	RelationshipTypeManyToMany RelationshipType = "ManyToMany"
+)
+
 type ManyToOneRelationship struct {
 	SchemaName           string `json:"SchemaName"`
 	ReferencedEntity     string `json:"ReferencedEntity"`
@@ -25,7 +33,7 @@ type ManyToManyRelationship struct {
 }
 
 type RelationshipRow struct {
-	Type             string
+	Type             RelationshipType
 	SchemaName       string
 	CurrentEntity    string
 	CurrentAttribute string
@@ -44,7 +52,7 @@ func (r EntityRelationships) Rows(currentEntity string) []RelationshipRow {
 
 	for _, rel := range r.OneToManyRelationships {
 		rows = append(rows, RelationshipRow{
-			Type:             "OneToMany",
+			Type:             RelationshipTypeOneToMany,
 			SchemaName:       rel.SchemaName,
 			CurrentEntity:    rel.ReferencedEntity,
 			CurrentAttribute: rel.ReferencedAttribute,
@@ -54,7 +62,7 @@ func (r EntityRelationships) Rows(currentEntity string) []RelationshipRow {
 	}
 	for _, rel := range r.ManyToOneRelationships {
 		rows = append(rows, RelationshipRow{
-			Type:             "ManyToOne",
+			Type:             RelationshipTypeManyToOne,
 			SchemaName:       rel.SchemaName,
 			CurrentEntity:    rel.ReferencingEntity,
 			CurrentAttribute: rel.ReferencingAttribute,
@@ -72,7 +80,7 @@ func relationshipRowFromManyToMany(rel ManyToManyRelationship, currentEntity str
 	switch currentEntity {
 	case rel.Entity1LogicalName:
 		return RelationshipRow{
-			Type:             "ManyToMany",
+			Type:             RelationshipTypeManyToMany,
 			SchemaName:       rel.SchemaName,
 			CurrentEntity:    rel.Entity1LogicalName,
 			CurrentAttribute: rel.Entity1IntersectAttribute,
@@ -81,7 +89,7 @@ func relationshipRowFromManyToMany(rel ManyToManyRelationship, currentEntity str
 		}
 	case rel.Entity2LogicalName:
 		return RelationshipRow{
-			Type:             "ManyToMany",
+			Type:             RelationshipTypeManyToMany,
 			SchemaName:       rel.SchemaName,
 			CurrentEntity:    rel.Entity2LogicalName,
 			CurrentAttribute: rel.Entity2IntersectAttribute,
@@ -90,7 +98,7 @@ func relationshipRowFromManyToMany(rel ManyToManyRelationship, currentEntity str
 		}
 	default:
 		return RelationshipRow{
-			Type:             "ManyToMany",
+			Type:             RelationshipTypeManyToMany,
 			SchemaName:       rel.SchemaName,
 			CurrentEntity:    "unknown",
 			CurrentAttribute: "unknown",

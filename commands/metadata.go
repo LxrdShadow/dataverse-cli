@@ -128,7 +128,7 @@ func getRequiredLevel(requiredLevel string) string {
 }
 
 func renderRelationshipsMetadataTable(relationships models.EntityRelationships, logicalName string) error {
-	headerRow := table.Row{"Relationship Type", "Current Entity", "Current Attribute", "Related Entity", "Related Attribute"}
+	headerRow := table.Row{"Relationship Type", "Current Entity", "Current Attribute", "Relationship", "Related Attribute", "Related Entity"}
 	relationshipRows := relationships.Rows(logicalName)
 
 	rows := make([]table.Row, 0, len(relationshipRows))
@@ -137,13 +137,27 @@ func renderRelationshipsMetadataTable(relationships models.EntityRelationships, 
 			relationship.Type,
 			relationship.CurrentEntity,
 			relationship.CurrentAttribute,
-			relationship.RelatedEntity,
+			getRelationshipRepresentation(relationship),
 			relationship.RelatedAttribute,
+			relationship.RelatedEntity,
 		})
 	}
 
 	printTable(headerRow, rows)
 	return nil
+}
+
+func getRelationshipRepresentation(relationship models.RelationshipRow) string {
+	switch relationship.Type {
+	case models.RelationshipTypeOneToMany:
+		return " (1) <- (*) "
+	case models.RelationshipTypeManyToOne:
+		return " (*) -> (1) "
+	case models.RelationshipTypeManyToMany:
+		return " (*) <-> (*) "
+	default:
+		return "unknown"
+	}
 }
 
 func metadataUsage() string {
