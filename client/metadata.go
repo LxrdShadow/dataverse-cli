@@ -69,11 +69,37 @@ func (c *DataverseClient) ListEntityAttributes(logicalName string) ([]models.Ent
 	return response.Value, nil
 }
 
+func (c *DataverseClient) ListEntityRelationships(logicalName string) (*models.EntityRelationships, error) {
+	requestURL := c.entityRelationshipsURL(logicalName)
+
+	body, err := c.getURL(requestURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var response models.EntityRelationships
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse entity relationships: %w", err)
+	}
+
+	return &response, nil
+}
+
 func (c *DataverseClient) entityAttributesURL(logicalName string) *url.URL {
 	endpoint := c.endpoint(entityDefinitionPath(logicalName), "Attributes")
 
 	query := endpoint.Query()
-	query.Set("$select", constants.DefaultAttributesInfo)
+	query.Set("$select", constants.DefaultAttributesSelect)
+	endpoint.RawQuery = query.Encode()
+
+	return endpoint
+}
+
+func (c *DataverseClient) entityRelationshipsURL(logicalName string) *url.URL {
+	endpoint := c.endpoint(entityDefinitionPath(logicalName))
+
+	query := endpoint.Query()
+	query.Set("$expand", constants.DefaultRelationshipsSelect)
 	endpoint.RawQuery = query.Encode()
 
 	return endpoint
@@ -81,7 +107,7 @@ func (c *DataverseClient) entityAttributesURL(logicalName string) *url.URL {
 
 func buildEntityListURL(baseURL *url.URL, scope models.EntityScope, management models.EntityManagement, customFilters []string) *url.URL {
 	query := baseURL.Query()
-	query.Set("$select", constants.DefaultEntityAttributes)
+	query.Set("$select", constants.DefaultEntityAttributesSelect)
 
 	filters := append([]string{}, customFilters...)
 

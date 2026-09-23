@@ -9,16 +9,21 @@ import (
 
 func parseEntityMetadataOptions(args []string) (models.EntityMetadataOptions, error) {
 	fs := flag.NewFlagSet("get", flag.ContinueOnError)
-	var attributes bool
+	var attributes, relationships bool
 	var rawFormat string
 
 	fs.BoolVar(&attributes, "attributes", false, "Display the metadata of the attributes of the entity")
+	fs.BoolVar(&relationships, "relationships", false, "Display the metadata of the relationships of the entity")
 	fs.StringVar(&rawFormat, "output", "table", "Output format (table, json)")
 	fs.StringVar(&rawFormat, "o", "table", "Output format (table, json) shorthand")
 	fs.Usage = func() { fmt.Println(metadataUsage()) }
 
 	if err := fs.Parse(args); err != nil {
 		return models.EntityMetadataOptions{}, err
+	}
+
+	if attributes && relationships {
+		return models.EntityMetadataOptions{}, fmt.Errorf("attributes and relationships cannot be displayed at the same time")
 	}
 
 	var format models.OutputFormat
@@ -32,7 +37,8 @@ func parseEntityMetadataOptions(args []string) (models.EntityMetadataOptions, er
 	}
 
 	return models.EntityMetadataOptions{
-		Output:     format,
-		Attributes: attributes,
+		Output:        format,
+		Attributes:    attributes,
+		Relationships: relationships,
 	}, nil
 }
