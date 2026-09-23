@@ -12,7 +12,7 @@ func parseEntityMetadataOptions(args []string) (models.EntityMetadataOptions, er
 	var attributes bool
 	var rawFormat string
 
-	fs.BoolVar(&attributes, "columns", false, "Display the metadata of the attributes of the entity")
+	fs.BoolVar(&attributes, "attributes", false, "Display the metadata of the attributes of the entity")
 	fs.StringVar(&rawFormat, "output", "table", "Output format (table, json)")
 	fs.StringVar(&rawFormat, "o", "table", "Output format (table, json) shorthand")
 	fs.Usage = func() { fmt.Println(metadataUsage()) }

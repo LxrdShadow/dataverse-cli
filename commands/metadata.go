@@ -25,13 +25,8 @@ func runMetadataCommand(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
-	entity, err := client.GetEntity(args[0])
-	if err != nil {
-		return err
-	}
-
 	if options.Attributes {
-		attributes, err := client.ListEntityAttributes(entity.LogicalName)
+		attributes, err := client.ListEntityAttributes(args[0])
 		if err != nil {
 			return err
 		}
@@ -47,6 +42,11 @@ func runMetadataCommand(client *client.DataverseClient, args []string) error {
 			return fmt.Errorf("unsupported output format: %s", options.Output)
 		}
 	} else {
+		entity, err := client.GetEntity(args[0])
+		if err != nil {
+			return err
+		}
+
 		switch options.Output {
 		case models.OutputFormatJSON:
 			return renderJSON(entity)
