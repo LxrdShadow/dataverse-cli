@@ -25,9 +25,11 @@ func runMetadataCommand(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
+	logicalName := args[0]
+
 	switch {
 	case options.Attributes:
-		attributes, err := client.ListEntityAttributes(args[0])
+		attributes, err := client.ListEntityAttributes(logicalName)
 		if err != nil {
 			return err
 		}
@@ -43,7 +45,7 @@ func runMetadataCommand(client *client.DataverseClient, args []string) error {
 			return fmt.Errorf("unsupported output format: %s", options.Output)
 		}
 	case options.Relationships:
-		relationships, err := client.ListEntityRelationships(args[0])
+		relationships, err := client.ListEntityRelationships(logicalName)
 		if err != nil {
 			return err
 		}
@@ -52,15 +54,14 @@ func runMetadataCommand(client *client.DataverseClient, args []string) error {
 		case models.OutputFormatJSON:
 			return renderJSON(relationships)
 		case models.OutputFormatTable:
-			// if err := renderRelationshipsMetadataTable(relationships); err != nil {
-			// 	return fmt.Errorf("failed to render table: %w", err)
-			// }
-			return renderJSON(relationships)
+			if err := renderRelationshipsMetadataTable(relationships, logicalName); err != nil {
+				return fmt.Errorf("failed to render table: %w", err)
+			}
 		default:
 			return fmt.Errorf("unsupported output format: %s", options.Output)
 		}
 	default:
-		entity, err := client.GetEntity(args[0])
+		entity, err := client.GetEntity(logicalName)
 		if err != nil {
 			return err
 		}
@@ -124,6 +125,25 @@ func getRequiredLevel(requiredLevel string) string {
 		return level
 	}
 	return requiredLevel
+}
+
+func renderRelationshipsMetadataTable(relationships models.EntityRelationships, logicalName string) error {
+	headerRow := table.Row{"Relationship Type", "Current Entity", "Current Attribute", "Related Entity", "Related Attribute"}
+	relationshipRows := relationships.Rows(logicalName)
+
+	rows := make([]table.Row, 0, len(relationshipRows))
+	for _, relationship := range relationshipRows {
+		rows = append(rows, table.Row{
+			relationship.Type,
+			relationship.CurrentEntity,
+			relationship.CurrentAttribute,
+			relationship.RelatedEntity,
+			relationship.RelatedAttribute,
+		})
+	}
+
+	printTable(headerRow, rows)
+	return nil
 }
 
 func metadataUsage() string {

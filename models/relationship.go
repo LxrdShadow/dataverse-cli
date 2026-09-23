@@ -25,11 +25,12 @@ type ManyToManyRelationship struct {
 }
 
 type RelationshipRow struct {
-	Type          string
-	SchemaName    string
-	RelatedEntity string
-	FromAttribute string
-	ToAttribute   string
+	Type             string
+	SchemaName       string
+	CurrentEntity    string
+	CurrentAttribute string
+	RelatedEntity    string
+	RelatedAttribute string
 }
 
 type EntityRelationships struct {
@@ -43,20 +44,22 @@ func (r EntityRelationships) Rows(currentEntity string) []RelationshipRow {
 
 	for _, rel := range r.OneToManyRelationships {
 		rows = append(rows, RelationshipRow{
-			Type:          "OneToMany",
-			SchemaName:    rel.SchemaName,
-			RelatedEntity: rel.ReferencedEntity,
-			FromAttribute: rel.ReferencingAttribute,
-			ToAttribute:   rel.ReferencedAttribute,
+			Type:             "OneToMany",
+			SchemaName:       rel.SchemaName,
+			CurrentEntity:    rel.ReferencedEntity,
+			CurrentAttribute: rel.ReferencedAttribute,
+			RelatedEntity:    rel.ReferencingEntity,
+			RelatedAttribute: rel.ReferencingAttribute,
 		})
 	}
 	for _, rel := range r.ManyToOneRelationships {
 		rows = append(rows, RelationshipRow{
-			Type:          "ManyToOne",
-			SchemaName:    rel.SchemaName,
-			RelatedEntity: rel.ReferencingEntity,
-			FromAttribute: rel.ReferencedAttribute,
-			ToAttribute:   rel.ReferencingAttribute,
+			Type:             "ManyToOne",
+			SchemaName:       rel.SchemaName,
+			CurrentEntity:    rel.ReferencingEntity,
+			CurrentAttribute: rel.ReferencingAttribute,
+			RelatedEntity:    rel.ReferencedEntity,
+			RelatedAttribute: rel.ReferencedAttribute,
 		})
 	}
 	for _, rel := range r.ManyToManyRelationships {
@@ -69,27 +72,30 @@ func relationshipRowFromManyToMany(rel ManyToManyRelationship, currentEntity str
 	switch currentEntity {
 	case rel.Entity1LogicalName:
 		return RelationshipRow{
-			Type:          "ManyToMany",
-			SchemaName:    rel.SchemaName,
-			RelatedEntity: rel.Entity2LogicalName,
-			FromAttribute: rel.Entity1IntersectAttribute,
-			ToAttribute:   rel.Entity2IntersectAttribute,
+			Type:             "ManyToMany",
+			SchemaName:       rel.SchemaName,
+			CurrentEntity:    rel.Entity1LogicalName,
+			CurrentAttribute: rel.Entity1IntersectAttribute,
+			RelatedEntity:    rel.Entity2LogicalName,
+			RelatedAttribute: rel.Entity2IntersectAttribute,
 		}
 	case rel.Entity2LogicalName:
 		return RelationshipRow{
-			Type:          "ManyToMany",
-			SchemaName:    rel.SchemaName,
-			RelatedEntity: rel.Entity1LogicalName,
-			FromAttribute: rel.Entity2IntersectAttribute,
-			ToAttribute:   rel.Entity1IntersectAttribute,
+			Type:             "ManyToMany",
+			SchemaName:       rel.SchemaName,
+			CurrentEntity:    rel.Entity2LogicalName,
+			CurrentAttribute: rel.Entity2IntersectAttribute,
+			RelatedEntity:    rel.Entity1LogicalName,
+			RelatedAttribute: rel.Entity1IntersectAttribute,
 		}
 	default:
 		return RelationshipRow{
-			Type:          "ManyToMany",
-			SchemaName:    rel.SchemaName,
-			RelatedEntity: "unknown",
-			FromAttribute: "unknown",
-			ToAttribute:   "unknown",
+			Type:             "ManyToMany",
+			SchemaName:       rel.SchemaName,
+			CurrentEntity:    "unknown",
+			CurrentAttribute: "unknown",
+			RelatedEntity:    "unknown",
+			RelatedAttribute: "unknown",
 		}
 	}
 }
