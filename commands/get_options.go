@@ -17,6 +17,7 @@ func parseGetRecordOptions(args []string) (models.GetRecordOptions, error) {
 	fs.BoolVar(&displayEmpty, "display-empty", false, "Display empty fields")
 	fs.StringVar(&rawFormat, "output", "table", "Output format (table, json)")
 	fs.StringVar(&rawFormat, "o", "table", "Output format (table, json) shorthand")
+	fs.Usage = func() { fmt.Println(getUsage()) }
 
 	if err := fs.Parse(args); err != nil {
 		return models.GetRecordOptions{}, err
