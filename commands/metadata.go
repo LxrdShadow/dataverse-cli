@@ -166,5 +166,6 @@ func metadataUsage() string {
 Options:
   -h, --help   			Show this help message
   --attributes			Display the metadata of the attributes of the entity
+  --relationships		Display the metadata of the relationships of the entity
   -o, --output <format>  	Output format (json, table) (default: table)`
 }
