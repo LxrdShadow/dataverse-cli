@@ -21,6 +21,7 @@ type GetRecordOptions struct {
 }
 
 type EntityMetadataOptions struct {
-	Output     OutputFormat
-	Attributes bool
+	Output        OutputFormat
+	Attributes    bool
+	Relationships bool
 }

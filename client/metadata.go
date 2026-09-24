@@ -11,7 +11,7 @@ import (
 )
 
 func (c *DataverseClient) ListEntities(scope models.EntityScope, management models.EntityManagement) ([]models.Entity, error) {
-	requestURL := buildEntityListURL(c.endpoint(), scope, management, false, nil)
+	requestURL := buildEntityListURL(c.endpoint(), scope, management, nil)
 
 	body, err := c.getURL(requestURL.String(), nil)
 	if err != nil {
@@ -28,9 +28,9 @@ func (c *DataverseClient) ListEntities(scope models.EntityScope, management mode
 	return response.Value, nil
 }
 
-func (c *DataverseClient) GetEntity(logicalName string, includeAttributes bool) (*models.Entity, error) {
+func (c *DataverseClient) GetEntity(logicalName string) (*models.Entity, error) {
 	logicalNameFilter := fmt.Sprintf("LogicalName eq %s", odataStringLiteral(logicalName))
-	requestURL := buildEntityListURL(c.endpoint(), models.EntityScopeAll, models.EntityManagementAll, includeAttributes, []string{logicalNameFilter})
+	requestURL := buildEntityListURL(c.endpoint(), models.EntityScopeAll, models.EntityManagementAll, []string{logicalNameFilter})
 
 	body, err := c.getURL(requestURL.String(), nil)
 	if err != nil {
@@ -53,9 +53,6 @@ func (c *DataverseClient) GetEntity(logicalName string, includeAttributes bool) 
 
 func (c *DataverseClient) ListEntityAttributes(logicalName string) ([]models.EntityAttribute, error) {
 	requestURL := c.entityAttributesURL(logicalName)
-	query := requestURL.Query()
-	query.Set("$select", constants.DefaultAttributesInfo)
-	requestURL.RawQuery = query.Encode()
 
 	body, err := c.getURL(requestURL.String(), nil)
 	if err != nil {
@@ -63,7 +60,7 @@ func (c *DataverseClient) ListEntityAttributes(logicalName string) ([]models.Ent
 	}
 
 	var response struct {
-		Value []models.EntityAttribute `json:"Attributes"`
+		Value []models.EntityAttribute `json:"value"`
 	}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse entity attributes: %w", err)
@@ -72,25 +69,45 @@ func (c *DataverseClient) ListEntityAttributes(logicalName string) ([]models.Ent
 	return response.Value, nil
 }
 
-func (c *DataverseClient) entityAttributesURL(logicalName string) *url.URL {
-	endpoint := *c.apiURL
-	endpoint.Path = strings.TrimRight(endpoint.Path, "/") +
-		"/" + entityDefinitionPath(logicalName)
+func (c *DataverseClient) ListEntityRelationships(logicalName string) (models.EntityRelationships, error) {
+	requestURL := c.entityRelationshipsURL(logicalName)
 
-	query := endpoint.Query()
-	query.Set("$select", constants.DefaultAttributesInfo)
-	endpoint.RawQuery = query.Encode()
+	body, err := c.getURL(requestURL.String(), nil)
+	if err != nil {
+		return models.EntityRelationships{}, err
+	}
 
-	return &endpoint
+	var response models.EntityRelationships
+	if err := json.Unmarshal(body, &response); err != nil {
+		return models.EntityRelationships{}, fmt.Errorf("failed to parse entity relationships: %w", err)
+	}
+
+	return response, nil
 }
 
-func buildEntityListURL(baseURL *url.URL, scope models.EntityScope, management models.EntityManagement, includeAttributes bool, customFilters []string) *url.URL {
-	query := baseURL.Query()
-	query.Set("$select", constants.DefaultEntityAttributes)
+func (c *DataverseClient) entityAttributesURL(logicalName string) *url.URL {
+	endpoint := c.endpoint(entityDefinitionPath(logicalName), "Attributes")
 
-	if includeAttributes {
-		query.Set("$expand", "Attributes($select="+constants.DefaultAttributesInfo+")")
-	}
+	query := endpoint.Query()
+	query.Set("$select", constants.DefaultAttributesSelect)
+	endpoint.RawQuery = query.Encode()
+
+	return endpoint
+}
+
+func (c *DataverseClient) entityRelationshipsURL(logicalName string) *url.URL {
+	endpoint := c.endpoint(entityDefinitionPath(logicalName))
+
+	query := endpoint.Query()
+	query.Set("$expand", constants.DefaultRelationshipsSelect)
+	endpoint.RawQuery = query.Encode()
+
+	return endpoint
+}
+
+func buildEntityListURL(baseURL *url.URL, scope models.EntityScope, management models.EntityManagement, customFilters []string) *url.URL {
+	query := baseURL.Query()
+	query.Set("$select", constants.DefaultEntityAttributesSelect)
 
 	filters := append([]string{}, customFilters...)
 

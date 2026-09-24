@@ -34,7 +34,12 @@ func runGetCommand(client *client.DataverseClient, args []string) error {
 		return fmt.Errorf("invalid options: %w", err)
 	}
 
-	entity, err := client.GetEntity(logicalName, true)
+	entity, err := client.GetEntity(logicalName)
+	if err != nil {
+		return err
+	}
+
+	attributes, err := client.ListEntityAttributes(entity.LogicalName)
 	if err != nil {
 		return err
 	}
@@ -48,7 +53,7 @@ func runGetCommand(client *client.DataverseClient, args []string) error {
 	case models.OutputFormatJSON:
 		return renderJSON(record)
 	case models.OutputFormatTable:
-		err := renderFieldValueTable(entity.Attributes, options, record)
+		err := renderFieldValueTable(attributes, options, record)
 		if err != nil {
 			return fmt.Errorf("failed to render table: %w", err)
 		}

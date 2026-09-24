@@ -10,7 +10,6 @@ type Entity struct {
 	IsManaged            bool
 	PrimaryIdAttribute   string
 	PrimaryNameAttribute string
-	Attributes           []EntityAttribute `json:"-"`
 }
 
 func (e *Entity) UnmarshalJSON(data []byte) error {
@@ -22,7 +21,6 @@ func (e *Entity) UnmarshalJSON(data []byte) error {
 		IsManaged            bool
 		PrimaryIdAttribute   string
 		PrimaryNameAttribute string
-		Attributes           []EntityAttribute
 	}
 
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -34,7 +32,6 @@ func (e *Entity) UnmarshalJSON(data []byte) error {
 	e.DisplayName = raw.DisplayName.UserLocalizedLabel.Label
 	e.IsCustomEntity = raw.IsCustomEntity
 	e.IsManaged = raw.IsManaged
-	e.Attributes = raw.Attributes
 	e.PrimaryIdAttribute = raw.PrimaryIdAttribute
 	e.PrimaryNameAttribute = raw.PrimaryNameAttribute
 	return nil

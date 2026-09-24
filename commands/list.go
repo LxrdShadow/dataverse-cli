@@ -28,13 +28,18 @@ func runListCommand(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
-	entity, err := client.GetEntity(logicalName, true)
+	entity, err := client.GetEntity(logicalName)
+	if err != nil {
+		return err
+	}
+
+	attributes, err := client.ListEntityAttributes(entity.LogicalName)
 	if err != nil {
 		return err
 	}
 
 	if listOptions.Query.Select == "" && listOptions.Output == models.OutputFormatTable {
-		defaultFields := defaultDisplayFields(entity.Attributes)
+		defaultFields := defaultDisplayFields(attributes)
 
 		queryFields := make([]string, 0, len(defaultFields))
 		for _, field := range defaultFields {
@@ -53,7 +58,7 @@ func runListCommand(client *client.DataverseClient, args []string) error {
 	case models.OutputFormatJSON:
 		return renderJSON(records)
 	case models.OutputFormatTable:
-		err = renderTable(entity.Attributes, listOptions.Query.Select, records)
+		err = renderTable(attributes, listOptions.Query.Select, records)
 		if err != nil {
 			return fmt.Errorf("failed to render table: %w", err)
 		}

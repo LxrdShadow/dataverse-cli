@@ -25,24 +25,43 @@ func runMetadataCommand(client *client.DataverseClient, args []string) error {
 		return err
 	}
 
-	if options.Attributes {
-		entity, err := client.GetEntity(args[0], true)
+	logicalName := args[0]
+
+	switch {
+	case options.Attributes:
+		attributes, err := client.ListEntityAttributes(logicalName)
 		if err != nil {
 			return err
 		}
 
 		switch options.Output {
 		case models.OutputFormatJSON:
-			return renderJSON(entity.Attributes)
+			return renderJSON(attributes)
 		case models.OutputFormatTable:
-			if err := renderAttributesMetadataTable(entity.Attributes); err != nil {
+			if err := renderAttributesMetadataTable(attributes); err != nil {
 				return fmt.Errorf("failed to render table: %w", err)
 			}
 		default:
 			return fmt.Errorf("unsupported output format: %s", options.Output)
 		}
-	} else {
-		entity, err := client.GetEntity(args[0], false)
+	case options.Relationships:
+		relationships, err := client.ListEntityRelationships(logicalName)
+		if err != nil {
+			return err
+		}
+
+		switch options.Output {
+		case models.OutputFormatJSON:
+			return renderJSON(relationships)
+		case models.OutputFormatTable:
+			if err := renderRelationshipsMetadataTable(relationships, logicalName); err != nil {
+				return fmt.Errorf("failed to render table: %w", err)
+			}
+		default:
+			return fmt.Errorf("unsupported output format: %s", options.Output)
+		}
+	default:
+		entity, err := client.GetEntity(logicalName)
 		if err != nil {
 			return err
 		}
@@ -106,6 +125,39 @@ func getRequiredLevel(requiredLevel string) string {
 		return level
 	}
 	return requiredLevel
+}
+
+func renderRelationshipsMetadataTable(relationships models.EntityRelationships, logicalName string) error {
+	headerRow := table.Row{"Relationship Type", "Current Entity", "Current Attribute", "Relationship", "Related Attribute", "Related Entity"}
+	relationshipRows := relationships.Rows(logicalName)
+
+	rows := make([]table.Row, 0, len(relationshipRows))
+	for _, relationship := range relationshipRows {
+		rows = append(rows, table.Row{
+			relationship.Type,
+			relationship.CurrentEntity,
+			relationship.CurrentAttribute,
+			getRelationshipRepresentation(relationship),
+			relationship.RelatedAttribute,
+			relationship.RelatedEntity,
+		})
+	}
+
+	printTable(headerRow, rows)
+	return nil
+}
+
+func getRelationshipRepresentation(relationship models.RelationshipRow) string {
+	switch relationship.Type {
+	case models.RelationshipTypeOneToMany:
+		return " (1) <- (*) "
+	case models.RelationshipTypeManyToOne:
+		return " (*) -> (1) "
+	case models.RelationshipTypeManyToMany:
+		return " (*) <-> (*) "
+	default:
+		return "unknown"
+	}
 }
 
 func metadataUsage() string {

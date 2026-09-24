@@ -11,7 +11,7 @@ func odataStringLiteral(value string) string {
 
 func entityDefinitionPath(logicalName string) string {
 	return fmt.Sprintf(
-		"EntityDefinitions(LogicalName=%s)/Attributes",
+		"EntityDefinitions(LogicalName=%s)",
 		odataStringLiteral(logicalName),
 	)
 }
