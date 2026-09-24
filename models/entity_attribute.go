@@ -11,9 +11,14 @@ const (
 	AttributeTypeDateTime AttributeType = "DateTime"
 )
 
-type RequiredLevel struct {
-	Value string
-}
+type RequirementLevel string
+
+const (
+	RequirementNone                RequirementLevel = "None"
+	RequirementSystemRequired      RequirementLevel = "SystemRequired"
+	RequirementApplicationRequired RequirementLevel = "ApplicationRequired"
+	RequirementRecommended         RequirementLevel = "Recommended"
+)
 
 type EntityAttribute struct {
 	LogicalName   string
@@ -32,7 +37,9 @@ func (a *EntityAttribute) UnmarshalJSON(data []byte) error {
 		IsPrimaryName bool
 		IsPrimaryId   bool
 		IsLogical     bool
-		RequiredLevel RequiredLevel
+		RequiredLevel struct {
+			Value string
+		}
 		AttributeType AttributeType
 	}
 

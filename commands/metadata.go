@@ -115,9 +115,9 @@ func renderAttributesMetadataTable(attributes []models.EntityAttribute) error {
 
 func getRequiredLevel(requiredLevel string) string {
 	var requiredLevelMap = map[string]string{
-		"None":                "None",
+		"None":                "Optional",
 		"SystemRequired":      "System Required",
-		"ApplicationRequired": "Application Required",
+		"ApplicationRequired": "Required",
 		"Recommended":         "Recommended",
 	}
 
