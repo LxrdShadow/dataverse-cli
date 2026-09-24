@@ -11,10 +11,10 @@ import (
 func parseGetRecordOptions(args []string) (models.GetRecordOptions, error) {
 	fs := flag.NewFlagSet("get", flag.ContinueOnError)
 	var rawFormat, selectFields string
-	var displayEmpty bool
+	var includeEmpty bool
 
 	fs.StringVar(&selectFields, "select", "", "Select columns to retrieve and display")
-	fs.BoolVar(&displayEmpty, "display-empty", false, "Display empty fields")
+	fs.BoolVar(&includeEmpty, "include-empty", false, "Include empty fields")
 	fs.StringVar(&rawFormat, "output", "table", "Output format (table, json)")
 	fs.StringVar(&rawFormat, "o", "table", "Output format (table, json) shorthand")
 	fs.Usage = func() { fmt.Println(getUsage()) }
@@ -36,6 +36,6 @@ func parseGetRecordOptions(args []string) (models.GetRecordOptions, error) {
 	return models.GetRecordOptions{
 		Select:       selectFields,
 		Output:       format,
-		DisplayEmpty: displayEmpty,
+		IncludeEmpty: includeEmpty,
 	}, nil
 }

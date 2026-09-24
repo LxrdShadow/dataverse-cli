@@ -83,7 +83,7 @@ func renderFieldValueTable(attributes []models.EntityAttribute, options models.G
 
 	headerRow = table.Row{"Field", "Display Name", "Value"}
 	for _, field := range fields {
-		if value := record[field.RecordName]; value == nil && !options.DisplayEmpty {
+		if value := record[field.RecordName]; value == nil && !options.IncludeEmpty {
 			continue
 		}
 		row := table.Row{field.QueryName, field.DisplayName, valueOrEmpty(record, field.RecordName)}
@@ -101,6 +101,6 @@ Options:
   -h, --help			Show this help message
   --select <fields>  		Comma-separated list of fields to select
   --output, -o <format>  	Output format (json, table) (default: table)
-  --display-empty  		Display empty values (default: false)
+  --include-empty  		Include empty values (default: false)
 `
 }
