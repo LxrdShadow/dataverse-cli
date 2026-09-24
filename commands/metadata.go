@@ -33,6 +33,9 @@ func runMetadataCommand(client *client.DataverseClient, args []string) error {
 		if err != nil {
 			return err
 		}
+		if options.RequirementLevelSet {
+			attributes = filterAttributes(attributes, options.RequirementLevel)
+		}
 
 		switch options.Output {
 		case models.OutputFormatJSON:
@@ -113,18 +116,18 @@ func renderAttributesMetadataTable(attributes []models.EntityAttribute) error {
 	return nil
 }
 
-func getRequiredLevel(requiredLevel string) string {
-	var requiredLevelMap = map[string]string{
-		"None":                "Optional",
-		"SystemRequired":      "System Required",
-		"ApplicationRequired": "Required",
-		"Recommended":         "Recommended",
+func getRequiredLevel(requiredLevel models.RequirementLevel) string {
+	var requiredLevelMap = map[models.RequirementLevel]string{
+		models.RequirementLevelNone:                "Optional",
+		models.RequirementLevelSystemRequired:      "System Required",
+		models.RequirementLevelApplicationRequired: "Application Required",
+		models.RequirementLevelRecommended:         "Recommended",
 	}
 
 	if level, ok := requiredLevelMap[requiredLevel]; ok {
 		return level
 	}
-	return requiredLevel
+	return string(requiredLevel)
 }
 
 func renderRelationshipsMetadataTable(relationships models.EntityRelationships, logicalName string) error {
@@ -167,5 +170,6 @@ Options:
   -h, --help   			Show this help message
   --attributes			Display the metadata of the attributes of the entity
   --relationships		Display the metadata of the relationships of the entity
+	--required-level <level>	Filter attributes by requirement level (none, system, application, recommended)
   -o, --output <format>  	Output format (json, table) (default: table)`
 }

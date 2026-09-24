@@ -14,10 +14,10 @@ const (
 type RequirementLevel string
 
 const (
-	RequirementNone                RequirementLevel = "None"
-	RequirementSystemRequired      RequirementLevel = "SystemRequired"
-	RequirementApplicationRequired RequirementLevel = "ApplicationRequired"
-	RequirementRecommended         RequirementLevel = "Recommended"
+	RequirementLevelNone                RequirementLevel = "None"
+	RequirementLevelSystemRequired      RequirementLevel = "SystemRequired"
+	RequirementLevelApplicationRequired RequirementLevel = "ApplicationRequired"
+	RequirementLevelRecommended         RequirementLevel = "Recommended"
 )
 
 type EntityAttribute struct {
@@ -26,7 +26,7 @@ type EntityAttribute struct {
 	IsPrimaryName bool
 	IsPrimaryId   bool
 	IsLogical     bool
-	RequiredLevel string
+	RequiredLevel RequirementLevel
 	AttributeType AttributeType
 }
 
@@ -38,7 +38,7 @@ func (a *EntityAttribute) UnmarshalJSON(data []byte) error {
 		IsPrimaryId   bool
 		IsLogical     bool
 		RequiredLevel struct {
-			Value string
+			Value RequirementLevel
 		}
 		AttributeType AttributeType
 	}

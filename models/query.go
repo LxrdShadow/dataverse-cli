@@ -21,7 +21,9 @@ type GetRecordOptions struct {
 }
 
 type EntityMetadataOptions struct {
-	Output        OutputFormat
-	Attributes    bool
-	Relationships bool
+	Output              OutputFormat
+	Attributes          bool
+	Relationships       bool
+	RequirementLevel    RequirementLevel
+	RequirementLevelSet bool
 }
